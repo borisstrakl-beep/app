@@ -1,0 +1,3330 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plačila — Boris Štrakl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F7F5F0;
+  --surface: #FFFFFF;
+  --surface2: #F0EDE6;
+  --border: #E2DDD4;
+  --border2: #CEC9BE;
+  --text: #1A1814;
+  --text2: #6B6760;
+  --text3: #9C9890;
+  --accent: #C4933A;
+  --accent-bg: #FBF3E3;
+  --accent-dark: #9B7228;
+  --green: #2D7A4F;
+  --green-bg: #E8F5EE;
+  --blue: #1E5FA8;
+  --blue-bg: #E6EFF9;
+  --red: #B83232;
+  --red-bg: #FAEAEA;
+  --purple: #6B3FA0;
+  --purple-bg: #F0E8FA;
+  --teal: #1A7A72;
+  --teal-bg: #E2F4F2;
+  --r: 8px;
+  --rl: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow2: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Syne', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── LAYOUT ── */
+.app { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 220px;
+  min-height: 100vh;
+  background: var(--text);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.sidebar-logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.sidebar-logo h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+}
+.sidebar-logo span {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.sidebar-nav { padding: 16px 12px; flex: 1; }
+.nav-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  padding: 0 8px;
+  margin: 16px 0 6px;
+}
+.nav-label:first-child { margin-top: 0; }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--r);
+  cursor: pointer;
+  color: rgba(255,255,255,0.65);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  position: relative;
+}
+.nav-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+.nav-item.active { background: var(--accent); color: #fff; }
+.nav-item .icon { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.8; }
+.nav-item.active .icon { opacity: 1; }
+.nav-count {
+  margin-left: auto;
+  background: rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.6);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 20px;
+}
+.nav-item.active .nav-count { background: rgba(255,255,255,0.25); color: #fff; }
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.25);
+  line-height: 1.6;
+}
+
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.topbar-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+.topbar-subtitle {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text3);
+}
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+.content { padding: 24px; flex: 1; }
+
+/* ── TABS (sub-navigation within sections) ── */
+.section-tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--surface2);
+  border-radius: var(--r);
+  padding: 3px;
+  width: fit-content;
+  margin-bottom: 20px;
+}
+.section-tab {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text2);
+  transition: all 0.15s;
+  border: none;
+  background: none;
+}
+.section-tab.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+/* ── METRIC CARDS ── */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  padding: 16px;
+}
+.metric-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 8px;
+}
+.metric-value {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -1px;
+  color: var(--text);
+}
+.metric-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 4px;
+}
+
+/* ── FILTERS ── */
+.filters-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.filters-bar input,
+.filters-bar select {
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--surface);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  padding: 0 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.filters-bar input:focus,
+.filters-bar select:focus { border-color: var(--accent); }
+.filters-bar input { min-width: 180px; }
+
+.btn {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--border2); background: var(--surface2); }
+.btn-primary {
+  background: var(--text);
+  color: #fff;
+  border-color: var(--text);
+}
+.btn-primary:hover { background: #333; border-color: #333; }
+.btn-accent {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.btn-accent:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+.btn-sm { height: 28px; padding: 0 10px; font-size: 11px; }
+.btn-danger { color: var(--red); border-color: transparent; }
+.btn-danger:hover { background: var(--red-bg); border-color: var(--red); }
+.btn-ghost { border-color: transparent; background: transparent; }
+.btn-ghost:hover { background: var(--surface2); border-color: var(--border); }
+
+/* ── TABLE ── */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  overflow: hidden;
+}
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table-wrap thead th {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 10px 14px;
+  text-align: left;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  font-weight: 400;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.table-wrap thead th:hover { color: var(--text2); }
+.table-wrap thead th.sorted { color: var(--accent); }
+.table-wrap tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+.table-wrap tbody tr:last-child { border-bottom: none; }
+.table-wrap tbody tr:hover { background: var(--surface2); }
+.table-wrap tbody td {
+  padding: 11px 14px;
+  vertical-align: middle;
+}
+.table-empty {
+  text-align: center;
+  padding: 48px;
+  color: var(--text3);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+}
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.badge-debit { background: var(--blue-bg); color: var(--blue); }
+.badge-credit { background: var(--purple-bg); color: var(--purple); }
+.badge-cash { background: var(--green-bg); color: var(--green); }
+.badge-paypal { background: var(--teal-bg); color: var(--teal); }
+
+.cat-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.3px;
+}
+.cat-streaming { background: #FDF0E0; color: #854F0B; }
+.cat-electric  { background: var(--green-bg); color: var(--green); }
+.cat-mobile    { background: var(--teal-bg); color: var(--teal); }
+.cat-parking   { background: var(--surface2); color: var(--text2); }
+.cat-events    { background: var(--purple-bg); color: var(--purple); }
+.cat-shopping  { background: #FAECEA; color: #8B2525; }
+.cat-subscription { background: var(--accent-bg); color: var(--accent-dark); }
+.cat-school    { background: var(--blue-bg); color: var(--blue); }
+.cat-other     { background: var(--surface2); color: var(--text2); }
+.cat-food      { background: #FEF0E8; color: #7A3410; }
+.cat-health    { background: #F0FBF4; color: #1A6B3A; }
+.cat-fuel      { background: #F5F0FF; color: #5B2FAA; }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 7px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text2);
+}
+.tag-remove {
+  background: none; border: none; cursor: pointer;
+  color: var(--text3); font-size: 12px; line-height: 1;
+  padding: 0; margin-left: 2px;
+}
+.tag-remove:hover { color: var(--red); }
+
+.amount-cell {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: right;
+  white-space: nowrap;
+}
+.amount-cell.zero { color: var(--text3); font-size: 11px; }
+
+/* ── MODAL ── */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(10,8,5,0.55);
+  backdrop-filter: blur(2px);
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow2);
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+.modal h3 {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  letter-spacing: -0.4px;
+}
+.form-row { margin-bottom: 14px; }
+.form-row label {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 5px;
+}
+.form-row input,
+.form-row select,
+.form-row textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form-row input:focus,
+.form-row select:focus,
+.form-row textarea:focus { border-color: var(--accent); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+.installment-box {
+  background: var(--purple-bg);
+  border: 1px solid rgba(107,63,160,0.2);
+  border-radius: var(--r);
+  padding: 12px 14px;
+  margin-top: 8px;
+}
+.installment-box p {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--purple);
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+.installment-calc {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--purple);
+  margin-top: 8px;
+}
+
+/* ── TAG INPUT ── */
+.tag-input-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--bg);
+  min-height: 38px;
+  align-items: center;
+  cursor: text;
+}
+.tag-input-wrap:focus-within { border-color: var(--accent); }
+.tag-input-wrap input {
+  border: none;
+  background: none;
+  outline: none;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  min-width: 80px;
+  flex: 1;
+  padding: 0;
+}
+.tag-input-wrap input:focus { border: none; }
+
+/* ── CHARTS ── */
+.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  padding: 16px;
+}
+.chart-card-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 12px;
+}
+.chart-card-full { grid-column: 1 / -1; }
+
+/* ── INSTALLMENTS ── */
+.inst-progress {
+  height: 4px;
+  background: var(--surface2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 6px;
+  width: 100px;
+}
+.inst-progress-bar {
+  height: 100%;
+  background: var(--purple);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+/* ── STORE TAB ── */
+.store-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.receipt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.receipt-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.receipt-card:hover { border-color: var(--border2); box-shadow: var(--shadow2); }
+.receipt-card-head {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.receipt-store { font-weight: 600; font-size: 14px; }
+.receipt-date {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 2px;
+}
+.receipt-total {
+  font-family: 'DM Mono', monospace;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--accent);
+}
+.receipt-items { padding: 10px 16px 14px; }
+.receipt-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  font-size: 12px;
+  border-bottom: 1px dashed var(--border);
+}
+.receipt-item-row:last-child { border-bottom: none; }
+.item-name { color: var(--text); }
+.item-qty { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); }
+.item-price {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ── PRICE COMPARISON ── */
+.compare-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.compare-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  letter-spacing: -0.3px;
+}
+.compare-subtitle {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+  margin-bottom: 16px;
+}
+.compare-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.compare-item:last-child { border-bottom: none; }
+.compare-item-name { flex: 1; font-size: 13px; }
+.compare-bar-wrap { flex: 2; }
+.compare-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 11px;
+}
+.compare-bar-row:last-child { margin-bottom: 0; }
+.compare-store-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--text3);
+  width: 60px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.compare-bar {
+  height: 6px;
+  border-radius: 3px;
+  transition: width 0.4s;
+}
+.compare-price {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  min-width: 50px;
+  text-align: right;
+}
+.compare-cheapest { color: var(--green); }
+.compare-expensive { color: var(--text2); }
+
+/* ── MOBILE ── */
+.mobile-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 52px;
+  height: 52px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-size: 22px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(196,147,58,0.4);
+  z-index: 50;
+  transition: transform 0.15s;
+}
+.mobile-fab:active { transform: scale(0.94); }
+
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--text);
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 30;
+}
+
+/* ── STATUS BAR ── */
+.status-bar {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--text);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 30px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  z-index: 200;
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.status-bar.show { transform: translateX(-50%) translateY(0); }
+
+/* ── LOADING ── */
+.loading-overlay {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  transition: opacity 0.4s;
+}
+.loading-overlay.hidden { opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.loading-logo {
+  font-family: 'Instrument Serif', serif;
+  font-size: 36px;
+  letter-spacing: -1px;
+}
+.loading-text {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 1px;
+}
+.spinner {
+  width: 24px; height: 24px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: -220px;
+    z-index: 40;
+    transition: left 0.25s cubic-bezier(0.4,0,0.2,1);
+    height: 100%;
+  }
+  .sidebar.open { left: 0; }
+  .sidebar-overlay.open { display: block; }
+  .hamburger { display: flex; }
+  .mobile-fab { display: flex; }
+  .topbar { padding: 0 14px; }
+  .content { padding: 14px; }
+  .chart-grid { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  .filters-bar { gap: 6px; }
+  .filters-bar input { min-width: 120px; }
+  .table-wrap { overflow-x: auto; }
+  table { min-width: 600px; }
+  .receipt-grid { grid-template-columns: 1fr; }
+}
+
+/* ── MISC ── */
+.no-select { user-select: none; }
+.sort-icon { font-size: 10px; margin-left: 3px; }
+.inline-edit { display: flex; align-items: center; gap: 6px; }
+.action-btns { display: flex; gap: 2px; opacity: 0; transition: opacity 0.1s; }
+tr:hover .action-btns { opacity: 1; }
+.text-muted { color: var(--text3); }
+.text-mono { font-family: 'DM Mono', monospace; }
+.text-right { text-align: right; }
+.flex { display: flex; }
+.flex-gap { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.page { display: none; }
+.page.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-logo">Plačila</div>
+  <div class="spinner"></div>
+  <div class="loading-text">Nalagam podatke...</div>
+</div>
+
+<!-- Sidebar Overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <h1>Plačila</h1>
+      <span>Boris Štrakl</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Pregled</div>
+      <button class="nav-item active" onclick="navigate('transactions')" id="nav-transactions">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="3" width="14" height="2" rx="1"/><rect x="1" y="7" width="14" height="2" rx="1"/><rect x="1" y="11" width="8" height="2" rx="1"/></svg>
+        Transakcije
+        <span class="nav-count" id="cnt-transactions">0</span>
+      </button>
+      <button class="nav-item" onclick="navigate('analytics')" id="nav-analytics">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 12h2V8H2v4zm3 0h2V5H5v7zm3 0h2V2H8v10zm3 0h2V7h-2v5z"/></svg>
+        Analitika
+      </button>
+      <button class="nav-item" onclick="navigate('installments')" id="nav-installments">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm.5 3.5v4l2.5 1.5-.75 1.25L7.5 9V4.5h1z"/></svg>
+        Obroki
+        <span class="nav-count" id="cnt-installments">0</span>
+      </button>
+      <button class="nav-item" onclick="navigate('creditcard')" id="nav-creditcard">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="3" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="1" y="6" width="14" height="2.5"/><rect x="3" y="10" width="4" height="1" rx="0.5"/></svg>
+        Kreditna kartica
+      </button>
+      <button class="nav-item" onclick="navigate('debitcard')" id="nav-debitcard">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="3" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="1" y="6" width="14" height="2.5"/><circle cx="11" cy="10.5" r="1.2"/><circle cx="13.2" cy="10.5" r="1.2"/></svg>
+        Bančna kartica
+      </button>
+      <div class="nav-label">Kategorije</div>
+      <button class="nav-item" onclick="navigate('store')" id="nav-store">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2h14l-1.5 7H2.5L1 2zm1.5 9h11l1 3H1.5l1-3z"/></svg>
+        Trgovina
+        <span class="nav-count" id="cnt-store">0</span>
+      </button>
+      <button class="nav-item" onclick="navigate('scan')" id="nav-scan">
+        <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="5" height="5" rx="1" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="9" y="2" width="5" height="5" rx="1" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="2" y="9" width="5" height="5" rx="1" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M9 11.5h2M11 9.5v4M13 11h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Uvoz računov
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      Skupna baza<br>Zadnje posodoblj.:<br><span id="lastSync">—</span>
+    </div>
+  </aside>
+
+  <div class="main">
+    <!-- Topbar -->
+    <div class="topbar">
+      <button class="hamburger" onclick="toggleSidebar()">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor"><rect y="3" width="20" height="2" rx="1"/><rect y="9" width="20" height="2" rx="1"/><rect y="15" width="20" height="2" rx="1"/></svg>
+      </button>
+      <div>
+        <div class="topbar-title" id="topbarTitle">Transakcije</div>
+        <div class="topbar-subtitle" id="topbarSub">Skupna baza plačil</div>
+      </div>
+      <div class="topbar-right">
+        <span id="syncIndicator" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);transition:color 0.3s">⬤ Firebase</span>
+        <button class="btn btn-sm" onclick="syncData()" title="Osveži">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M8 3a5 5 0 104.546 2.914.5.5 0 00-.908.417A4 4 0 118 4V3z"/><path d="M8 3l-2 2 2 2V3z"/></svg>
+          Osveži
+        </button>
+        <button class="btn btn-sm" onclick="openFirebaseSetup()" title="Firebase nastavitve">⚙ Baza</button>
+        <button class="btn btn-sm" onclick="navigate('scan')" title="Uvozi račun">⬆ Uvozi</button>
+        <button class="btn btn-accent btn-sm" onclick="openAddModal()">+ Dodaj</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- ═══ TRANSACTIONS PAGE ═══ -->
+      <div class="page active" id="page-transactions">
+        <div class="metrics-grid" id="txMetrics"></div>
+        <div class="filters-bar">
+          <input type="search" id="txSearch" placeholder="Išči opis, trgovec, tag..." oninput="renderTx()">
+          <select id="txYear" onchange="onYearChange()">
+            <option value="">Vsa leta</option>
+            <option value="2026">2026</option>
+            <option value="2025">2025</option>
+            <option value="2024">2024</option>
+          </select>
+          <select id="txMonth" onchange="renderTx()" style="display:none">
+            <option value="">Vsi meseci</option>
+            <option value="01">Januar</option><option value="02">Februar</option>
+            <option value="03">Marec</option><option value="04">April</option>
+            <option value="05">Maj</option><option value="06">Junij</option>
+            <option value="07">Julij</option><option value="08">Avgust</option>
+            <option value="09">September</option><option value="10">Oktober</option>
+            <option value="11">November</option><option value="12">December</option>
+          </select>
+          <select id="txMethod" onchange="renderTx()">
+            <option value="">Vse metode</option>
+            <option value="Bančna kartica">Bančna kartica</option>
+            <option value="Kreditna kartica">Kreditna kartica</option>
+            <option value="PayPal">PayPal</option>
+            <option value="Gotovina">Gotovina</option>
+          </select>
+          <select id="txCat" onchange="renderTx()">
+            <option value="">Vse kategorije</option>
+            <option>Streaming</option><option>Elektrika</option><option>Mobitel</option>
+            <option>Parkiranje</option><option>Vstopnice/dogodki</option><option>Nakupovanje</option>
+            <option>Naročnina</option><option>Šola</option><option>Hrana/restavracija</option>
+            <option>Zdravje</option><option>Gorivo</option><option>Drugo</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th onclick="setSort('date')" id="th-date">Datum <span class="sort-icon">↓</span></th>
+                <th onclick="setSort('desc')">Opis</th>
+                <th onclick="setSort('cat')">Kategorija</th>
+                <th>Tagi</th>
+                <th onclick="setSort('method')">Metoda</th>
+                <th onclick="setSort('amount')" class="text-right" id="th-amount">Znesek</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="txBody"></tbody>
+          </table>
+          <div class="table-empty" id="txEmpty" style="display:none">Ni transakcij za izbrane filtre.</div>
+        </div>
+      </div>
+
+      <!-- ═══ ANALYTICS PAGE ═══ -->
+      <div class="page" id="page-analytics">
+        <div class="metrics-grid" id="analyticsMetrics"></div>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-card-title">Po metodi plačila</div>
+            <div style="position:relative;height:200px"><canvas id="chartMethod" role="img" aria-label="Tortni grafikon po metodi plačila"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-title">Po kategoriji</div>
+            <div style="position:relative;height:200px"><canvas id="chartCat" role="img" aria-label="Stolpičasti grafikon po kategoriji"></canvas></div>
+          </div>
+          <div class="chart-card chart-card-full">
+            <div class="chart-card-title">Mesečni stroški</div>
+            <select id="analyticsYear" onchange="renderCharts()" style="font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;margin-bottom:12px">
+              <option value="both">2025 + 2026</option>
+              <option value="2026">Samo 2026</option>
+              <option value="2025">Samo 2025</option>
+              <option value="2024">Samo 2024</option>
+            </select>
+            <div style="position:relative;height:220px"><canvas id="chartMonthly" role="img" aria-label="Črtni grafikon mesečnih stroškov"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ INSTALLMENTS PAGE ═══ -->
+      <div class="page" id="page-installments">
+        <p style="font-size:12px;color:var(--text3);margin-bottom:16px;font-family:'DM Mono',monospace">Plačila s kreditno kartico na obroke · 1,60 EUR provizija za vsak obrok od 2. naprej</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Datum</th>
+                <th>Opis</th>
+                <th class="text-right">Skupaj</th>
+                <th class="text-right">Obrokov</th>
+                <th class="text-right">Mesečno</th>
+                <th>Napredek</th>
+                <th class="text-right">Preostalo</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="instBody"></tbody>
+          </table>
+          <div class="table-empty" id="instEmpty" style="display:none">Ni plačil na obroke.</div>
+        </div>
+      </div>
+
+      <!-- ═══ CREDIT CARD PAGE ═══ -->
+      <div class="page" id="page-creditcard">
+        <!-- Limit summary -->
+        <div class="metrics-grid" id="ccMetrics"></div>
+
+        <!-- Limit bar -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:18px 20px;margin-bottom:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div>
+              <div style="font-size:13px;font-weight:600">Limit kreditne kartice</div>
+              <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:2px">Skupna obremenitev = neplačani obroki</div>
+            </div>
+            <button class="btn btn-sm" onclick="openCcSettingsModal()">⚙ Nastavitve kartice</button>
+          </div>
+          <div style="height:12px;background:var(--surface2);border-radius:6px;overflow:hidden;margin-bottom:8px">
+            <div id="ccLimitBar" style="height:100%;border-radius:6px;transition:width 0.5s;background:var(--purple)"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">
+            <span id="ccUsedLabel">Obremenitev: —</span>
+            <span id="ccFreeLabel">Prosto: —</span>
+          </div>
+        </div>
+
+        <!-- Monthly breakdown -->
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">Razpis odtegljajev po mesecih</div>
+        <div id="ccMonthlySchedule" style="margin-bottom:24px"></div>
+
+        <!-- Active installment plans -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3)">Aktivni obrokovni plani</div>
+          <button class="btn btn-sm btn-accent" onclick="openAddModal();document.getElementById('fMethod').value='Kreditna kartica';updateInstCalc()">+ Dodaj nakup na obroke</button>
+        </div>
+        <div class="table-wrap" style="margin-bottom:20px">
+          <table>
+            <thead><tr>
+              <th>Nakup</th><th>Datum nakupa</th><th class="text-right">Znesek</th>
+              <th class="text-right">Obrokov</th><th class="text-right">Mesečno</th>
+              <th>Napredek</th><th class="text-right">Preostalo na limitu</th><th></th>
+            </tr></thead>
+            <tbody id="ccPlansBody"></tbody>
+          </table>
+          <div class="table-empty" id="ccPlansEmpty" style="display:none">Ni aktivnih obrokovnih planov.</div>
+        </div>
+
+        <!-- Manual debit entries -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3)">Ročni vnosi / popravki</div>
+          <button class="btn btn-sm" onclick="openManualDebitModal()">+ Ročni vnos</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Datum</th><th>Opis</th><th class="text-right">Znesek</th><th>Vrsta</th><th></th>
+            </tr></thead>
+            <tbody id="ccManualBody"></tbody>
+          </table>
+          <div class="table-empty" id="ccManualEmpty" style="display:none">Ni ročnih vnosov.</div>
+        </div>
+      </div>
+
+      <!-- ═══ DEBIT CARD PAGE ═══ -->
+      <div class="page" id="page-debitcard">
+        <div class="metrics-grid" id="dcMetrics"></div>
+
+        <!-- Balance bar -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:18px 20px;margin-bottom:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div>
+              <div style="font-size:13px;font-weight:600">Stanje na bančnem računu</div>
+              <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:2px" id="dcBarSubtitle">Začetno stanje ± prihodki ∓ odhodki</div>
+            </div>
+            <button class="btn btn-sm" onclick="openDcSettingsModal()">⚙ Nastavitve</button>
+          </div>
+          <div style="height:12px;background:var(--surface2);border-radius:6px;overflow:hidden;margin-bottom:8px">
+            <div id="dcBalanceBar" style="height:100%;border-radius:6px;transition:width 0.5s;background:var(--green)"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">
+            <span id="dcBalanceLabel">Stanje: —</span>
+            <span id="dcRefLabel">Referenca: —</span>
+          </div>
+        </div>
+
+        <!-- Recent activity summary -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:16px">
+            <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">Prihodki (iz vnosov)</div>
+            <div id="dcIncomeList" style="font-size:13px"></div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:16px">
+            <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">Odhodki z bančne kartice (iz transakcij)</div>
+            <div id="dcExpenseList" style="font-size:13px"></div>
+          </div>
+        </div>
+
+        <!-- Manual entries table -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3)">Vsi vnosi in popravki</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-sm" onclick="openDcEntryModal('prihodek')">+ Prihodek</button>
+            <button class="btn btn-sm" onclick="openDcEntryModal('odhodek')">+ Odhodek</button>
+            <button class="btn btn-sm btn-ghost" onclick="openDcEntryModal('popravek')">± Popravek stanja</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Datum</th><th>Opis</th><th class="text-right">Znesek</th><th>Vrsta</th><th>Stanje po</th><th></th>
+            </tr></thead>
+            <tbody id="dcEntriesBody"></tbody>
+          </table>
+          <div class="table-empty" id="dcEntriesEmpty" style="display:none">Ni vnosov. Začni z nastavitvijo začetnega stanja.</div>
+        </div>
+      </div>
+
+      <!-- ═══ SCAN / IMPORT PAGE ═══ -->
+      <div class="page" id="page-scan">
+        <div style="max-width:640px;margin:0 auto">
+          <p style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:20px">Naloži sliko ali PDF računa — Claude bo samodejno razpoznal podatke</p>
+
+          <!-- Drop zone -->
+          <div id="scanDropZone" style="border:2px dashed var(--border2);border-radius:var(--rl);padding:40px 24px;text-align:center;cursor:pointer;transition:all 0.15s;margin-bottom:16px;background:var(--surface)" onclick="document.getElementById('scanFileInput').click()" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor=''" ondrop="handleScanDrop(event)">
+            <div style="font-size:32px;margin-bottom:10px">📄</div>
+            <div style="font-weight:600;font-size:14px;margin-bottom:4px">Povleci datoteko sem ali klikni za izbiro</div>
+            <div style="font-size:12px;color:var(--text3)">PNG, JPG, JPEG, WEBP, PDF — do 10 MB</div>
+            <input type="file" id="scanFileInput" accept="image/*,.pdf" style="display:none" onchange="handleScanFile(this.files[0])">
+          </div>
+
+          <!-- File preview -->
+          <div id="scanPreviewWrap" style="display:none;margin-bottom:16px">
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;display:flex;align-items:center;gap:12px">
+              <div id="scanFileIcon" style="font-size:24px"></div>
+              <div style="flex:1;min-width:0">
+                <div id="scanFileName" style="font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+                <div id="scanFileSize" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)"></div>
+              </div>
+              <button class="btn btn-sm btn-ghost" onclick="clearScanFile()">✕</button>
+            </div>
+            <img id="scanImgPreview" style="display:none;width:100%;max-height:300px;object-fit:contain;border-radius:var(--r);border:1px solid var(--border);margin-top:8px">
+          </div>
+
+          <!-- Analyse button -->
+          <button id="scanAnalyseBtn" class="btn btn-primary" style="width:100%;justify-content:center;height:42px;font-size:14px;display:none" onclick="analyseReceipt()">
+            🔍 Analiziraj račun z AI
+          </button>
+
+          <!-- Progress -->
+          <div id="scanProgress" style="display:none;text-align:center;padding:24px">
+            <div class="spinner" style="margin:0 auto 12px"></div>
+            <div id="scanProgressText" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text2)">Pošiljam račun v analizo...</div>
+          </div>
+
+          <!-- Results -->
+          <div id="scanResults" style="display:none;margin-top:16px">
+            <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">Razpoznani podatki</div>
+
+            <!-- Type badge -->
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+              <span id="scanTypeLabel" style="font-size:13px;font-weight:500"></span>
+              <span id="scanTypeBadge" style="font-family:'DM Mono',monospace;font-size:10px;padding:2px 8px;border-radius:10px"></span>
+            </div>
+
+            <div class="form-grid" style="margin-bottom:12px">
+              <div class="form-row">
+                <label>Opis / Merchant *</label>
+                <input type="text" id="srDesc" placeholder="Ime trgovca / opis">
+              </div>
+              <div class="form-row">
+                <label>Datum *</label>
+                <input type="date" id="srDate">
+              </div>
+            </div>
+            <div class="form-grid" style="margin-bottom:12px">
+              <div class="form-row">
+                <label>Skupni znesek (EUR) *</label>
+                <input type="number" id="srAmount" step="0.01" min="0">
+              </div>
+              <div class="form-row">
+                <label>Metoda plačila</label>
+                <select id="srMethod">
+                  <option>Bančna kartica</option><option>Kreditna kartica</option>
+                  <option>PayPal</option><option>Gotovina</option><option>Mastercard</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-grid" style="margin-bottom:12px">
+              <div class="form-row">
+                <label>Kategorija</label>
+                <select id="srCat">
+                  <option>Nakupovanje</option><option>Hrana/restavracija</option><option>Streaming</option>
+                  <option>Elektrika</option><option>Mobitel</option><option>Parkiranje</option>
+                  <option>Vstopnice/dogodki</option><option>Naročnina</option><option>Šola</option>
+                  <option>Zdravje</option><option>Gorivo</option><option>Drugo</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label>Tagi</label>
+                <input type="text" id="srTags" placeholder="npr. uvožen, akcija...">
+              </div>
+            </div>
+
+            <!-- Store section (shown only for shops) -->
+            <div id="srStoreSection" style="display:none">
+              <div style="background:var(--surface2);border-radius:var(--r);padding:12px 14px;margin-bottom:12px">
+                <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">Artikli za zavihek Trgovina</div>
+                <div id="srItemsList"></div>
+                <button class="btn btn-sm" onclick="srAddItem()" style="margin-top:8px">+ Artikel</button>
+              </div>
+              <div class="form-row" style="margin-bottom:12px">
+                <label>Ime trgovine *</label>
+                <input type="text" id="srStore" placeholder="npr. Spar, Mercator, Lidl...">
+              </div>
+            </div>
+
+            <!-- AI notes -->
+            <div id="srAiNote" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:14px;padding:8px 12px;background:var(--surface2);border-radius:var(--r)"></div>
+
+            <!-- Save options -->
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-primary" onclick="saveScanResult(true,true)">✓ Shrani vse</button>
+              <button id="srSaveExpenseOnly" class="btn" onclick="saveScanResult(true,false)" style="display:none">Samo med stroške</button>
+              <button id="srSaveStoreOnly" class="btn" onclick="saveScanResult(false,true)" style="display:none">Samo v Trgovino</button>
+              <button class="btn btn-ghost" onclick="clearScanFile();document.getElementById('scanResults').style.display='none'">Prekliči</button>
+            </div>
+          </div>
+
+          <!-- History of imported -->
+          <div id="scanHistory" style="margin-top:28px"></div>
+        </div>
+      </div>
+
+      <!-- ═══ STORE PAGE ═══ -->
+      <div class="page" id="page-store">
+        <div class="section-tabs">
+          <button class="section-tab active" onclick="switchStoreTab('receipts')">Računi</button>
+          <button class="section-tab" onclick="switchStoreTab('compare')">Primerjava cen</button>
+        </div>
+        <div id="storeReceipts">
+          <div class="store-header">
+            <button class="btn btn-accent" onclick="openAddReceiptModal()">+ Dodaj račun</button>
+            <select id="storeFilter" onchange="renderStore()" style="height:34px;border:1px solid var(--border);border-radius:var(--r);font-family:'Syne',sans-serif;font-size:12px;padding:0 10px;background:var(--surface);color:var(--text)">
+              <option value="">Vse trgovine</option>
+            </select>
+            <input type="search" id="storeSearch" placeholder="Išči artikel..." oninput="renderStore()" style="height:34px;border:1px solid var(--border);border-radius:var(--r);font-family:'Syne',sans-serif;font-size:12px;padding:0 10px;background:var(--surface);color:var(--text);min-width:160px;outline:none">
+          </div>
+          <div class="receipt-grid" id="receiptGrid"></div>
+          <div class="table-empty" id="storeEmpty" style="display:none">Ni računov. Dodaj prvi račun.</div>
+        </div>
+        <div id="storeCompare" style="display:none">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+            <input type="search" id="compareSearch" placeholder="Išči artikel za primerjavo..." oninput="renderCompare()" style="height:34px;border:1px solid var(--border);border-radius:var(--r);font-family:'Syne',sans-serif;font-size:12px;padding:0 12px;background:var(--surface);color:var(--text);min-width:220px;outline:none">
+          </div>
+          <div id="compareResults"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile FAB -->
+<button class="mobile-fab" onclick="openAddModal()">+</button>
+
+<!-- Status Bar -->
+<div class="status-bar" id="statusBar"></div>
+
+<!-- ═══ ADD/EDIT PAYMENT MODAL ═══ -->
+<div class="modal-backdrop" id="modalTx">
+  <div class="modal">
+    <h3 id="modalTxTitle">Dodaj plačilo</h3>
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Opis / Trgovec *</label>
+        <input type="text" id="fDesc" placeholder="npr. IKEA nakup">
+      </div>
+      <div class="form-row">
+        <label>Datum *</label>
+        <input type="date" id="fDate">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Znesek (EUR)</label>
+        <input type="number" id="fAmount" step="0.01" min="0" placeholder="0.00" oninput="updateInstCalc()">
+      </div>
+      <div class="form-row">
+        <label>Metoda plačila *</label>
+        <select id="fMethod" onchange="updateInstCalc()">
+          <option>Bančna kartica</option>
+          <option>Kreditna kartica</option>
+          <option>PayPal</option>
+          <option>Gotovina</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Kategorija</label>
+        <select id="fCat">
+          <option>Nakupovanje</option><option>Streaming</option><option>Elektrika</option>
+          <option>Mobitel</option><option>Parkiranje</option><option>Vstopnice/dogodki</option>
+          <option>Naročnina</option><option>Šola</option><option>Hrana/restavracija</option>
+          <option>Zdravje</option><option>Gorivo</option><option>Drugo</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Opomba</label>
+        <input type="text" id="fNote" placeholder="neobvezno">
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Tagi (Enter za potrditev)</label>
+      <div class="tag-input-wrap" id="tagInputWrap" onclick="document.getElementById('tagInput').focus()">
+        <input type="text" id="tagInput" placeholder="Dodaj tag..." onkeydown="handleTagInput(event)">
+      </div>
+    </div>
+    <div id="instCalcBox" style="display:none">
+      <div class="installment-box">
+        <p>KREDITNA KARTICA — OBROKI (1,60 EUR provizija za vsak obrok od 2. naprej)</p>
+        <div class="form-row" style="margin-bottom:0">
+          <label>Število obrokov</label>
+          <input type="number" id="fInstallments" min="1" max="60" value="12" oninput="updateInstCalc()" style="max-width:100px">
+        </div>
+        <div class="installment-calc" id="instCalcText"></div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeModal('modalTx')">Prekliči</button>
+      <button class="btn btn-primary" onclick="saveTx()">Shrani</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ADD RECEIPT MODAL ═══ -->
+<div class="modal-backdrop" id="modalReceipt">
+  <div class="modal">
+    <h3 id="modalReceiptTitle">Dodaj račun iz trgovine</h3>
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Trgovina *</label>
+        <input type="text" id="rStore" placeholder="npr. Mercator, Spar, Lidl...">
+      </div>
+      <div class="form-row">
+        <label>Datum *</label>
+        <input type="date" id="rDate">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Metoda plačila</label>
+        <select id="rMethod">
+          <option>Bančna kartica</option>
+          <option>Kreditna kartica</option>
+          <option>Gotovina</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Tagi</label>
+        <input type="text" id="rTags" placeholder="npr. tedenski nakup, akcija">
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Artikli</label>
+      <div id="rItemsList"></div>
+      <button class="btn btn-sm" onclick="addItemRow()" style="margin-top:8px">+ Artikel</button>
+    </div>
+    <div style="text-align:right;margin-top:8px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text2)">
+      Skupaj: <strong id="rTotalDisplay">€0.00</strong>
+    </div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeModal('modalReceipt')">Prekliči</button>
+      <button class="btn btn-primary" onclick="saveReceipt()">Shrani</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CC SETTINGS MODAL ═══ -->
+<div class="modal-backdrop" id="modalCcSettings">
+  <div class="modal">
+    <h3>Nastavitve kreditne kartice</h3>
+    <div class="form-row">
+      <label>Skupni limit (EUR)</label>
+      <input type="number" id="ccLimit" step="50" min="0" placeholder="3000">
+    </div>
+    <div class="form-row">
+      <label>Dan v mesecu, ko kartica bremeni obroke</label>
+      <input type="number" id="ccDebitDay" min="1" max="28" placeholder="18" value="18">
+    </div>
+    <div class="form-row">
+      <label>Trenutna obremenitev (ročni vnos, če obstaja)</label>
+      <input type="number" id="ccManualUsed" step="0.01" min="0" placeholder="0.00">
+    </div>
+    <div class="form-row">
+      <label>Opomba</label>
+      <input type="text" id="ccNote" placeholder="npr. Visa Gold, banka XY">
+    </div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeModal('modalCcSettings')">Prekliči</button>
+      <button class="btn btn-primary" onclick="saveCcSettings()">Shrani</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MANUAL DEBIT MODAL ═══ -->
+<div class="modal-backdrop" id="modalManualDebit">
+  <div class="modal">
+    <h3 id="manualDebitTitle">Ročni vnos / popravek</h3>
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Datum *</label>
+        <input type="date" id="mdDate">
+      </div>
+      <div class="form-row">
+        <label>Vrsta *</label>
+        <select id="mdType">
+          <option value="obremenitev">Obremenitev (poveča porabo)</option>
+          <option value="plačilo">Plačilo / poplačilo (zmanjša porabo)</option>
+          <option value="popravek">Popravek stanja</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Opis *</label>
+      <input type="text" id="mdDesc" placeholder="npr. Plačilo računa, ročni popravek...">
+    </div>
+    <div class="form-row">
+      <label>Znesek (EUR) *</label>
+      <input type="number" id="mdAmount" step="0.01" min="0" placeholder="0.00">
+    </div>
+    <div class="form-row">
+      <label>Opomba</label>
+      <input type="text" id="mdNote" placeholder="neobvezno">
+    </div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeModal('modalManualDebit')">Prekliči</button>
+      <button class="btn btn-primary" onclick="saveManualDebit()">Shrani</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FIREBASE SETUP MODAL ═══ -->
+<div class="modal-backdrop" id="modalFirebase">
+  <div class="modal" style="max-width:540px">
+    <h3>🔥 Firebase nastavitev</h3>
+    <div id="fbStatus" style="padding:10px 14px;border-radius:var(--r);margin-bottom:16px;font-family:'DM Mono',monospace;font-size:12px"></div>
+    <div class="form-row">
+      <label>Firebase Realtime Database URL</label>
+      <input type="url" id="fbUrl" placeholder="https://ime-projekta-default-rtdb.europe-west1.firebasedatabase.app">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:5px">Najdeš ga v Firebase Console → Realtime Database → kopiraj URL brez poševnice na koncu</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:var(--r);padding:14px 16px;margin-bottom:16px">
+      <div style="font-weight:600;font-size:13px;margin-bottom:10px">Navodila za nastavitev (3 minute):</div>
+      <ol style="font-size:12px;line-height:2;padding-left:18px;color:var(--text2)">
+        <li>Pojdi na <a href="https://console.firebase.google.com" target="_blank" style="color:var(--accent)">console.firebase.google.com</a></li>
+        <li>Klikni <strong>Add project</strong> → vpiši ime (npr. <em>moja-placila</em>) → Continue</li>
+        <li>Google Analytics → <strong>izklopí</strong> → Create project</li>
+        <li>V levem meniju klikni <strong>Build → Realtime Database</strong></li>
+        <li>Klikni <strong>Create Database</strong> → izberi lokacijo <em>europe-west1</em></li>
+        <li>Na vprašanju o pravilih izberi <strong>Start in test mode</strong> → Enable</li>
+        <li>Kopiraj URL iz vrha (npr. <code style="background:var(--border);padding:1px 4px;border-radius:3px">https://moja-placila-default-rtdb.europe-west1.firebasedatabase.app</code>)</li>
+        <li>Prilepi URL zgoraj in klikni <strong>Shrani in poveži</strong></li>
+      </ol>
+    </div>
+    <div style="background:var(--accent-bg);border:1px solid rgba(196,147,58,0.3);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--accent-dark)">
+      ⚠ Test mode poteče po 30 dneh. Za trajno rešitev v Firebase Console → Realtime Database → Rules nastavi:<br>
+      <code style="font-family:'DM Mono',monospace;font-size:11px">{ "rules": { ".read": true, ".write": true } }</code>
+    </div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeModal('modalFirebase')">Zapri</button>
+      <button class="btn btn-ghost" onclick="testFirebase()">Testiraj povezavo</button>
+      <button class="btn btn-primary" onclick="saveFirebaseUrl()">Shrani in poveži</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RECEIPT DETAIL MODAL ═══ -->
+<div class="modal-backdrop" id="modalReceiptDetail">
+  <div class="modal" style="max-width:580px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">
+      <div>
+        <h3 id="rdStoreName" style="margin-bottom:4px"></h3>
+        <div id="rdMeta" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)"></div>
+        <div id="rdTags" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px"></div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;padding-left:16px">
+        <div id="rdTotal" style="font-family:'DM Mono',monospace;font-size:22px;font-weight:600;color:var(--accent)"></div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:2px">skupaj</div>
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:1fr auto auto;gap:0;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;color:var(--text3);padding:8px 0;border-bottom:1px solid var(--border)">
+        <span>Artikel</span><span style="text-align:right;padding-right:12px">Kol.</span><span style="text-align:right">Cena</span>
+      </div>
+      <div id="rdItemsList" style="max-height:380px;overflow-y:auto"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm btn-ghost" id="rdEditBtn">uredi račun</button>
+        <button class="btn btn-sm btn-danger" id="rdDeleteBtn">izbriši</button>
+      </div>
+      <button class="btn" onclick="closeModal('modalReceiptDetail')">Zapri</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DC SETTINGS MODAL ═══ -->
+<div class="modal-backdrop" id="modalDcSettings">
+  <div class="modal">
+    <h3>Nastavitve bančnega računa</h3>
+    <div class="form-row">
+      <label>Naziv računa / banke</label>
+      <input type="text" id="dcNote" placeholder="npr. NLB transakcijski račun">
+    </div>
+    <div class="form-row">
+      <label>Začetno / trenutno stanje (EUR) *</label>
+      <input type="number" id="dcInitBalance" step="0.01" placeholder="0.00">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:4px">To je izhodišče — vsi vnosi se seštevajo/odštevajo od tega zneska.</div>
+    </div>
+    <div class="form-row">
+      <label>Datum začetnega stanja *</label>
+      <input type="date" id="dcInitDate">
+    </div>
+    <div class="form-row">
+      <label>Referenčno (ciljno) stanje — opozorilo pri padcu pod (EUR)</label>
+      <input type="number" id="dcRefBalance" step="50" placeholder="npr. 500">
+    </div>
+    <div class="form-row">
+      <label>Upoštevaj odhodke z bančne kartice iz transakcij</label>
+      <select id="dcAutoDeduct">
+        <option value="yes">Da — avtomatsko odštej</option>
+        <option value="no">Ne — samo ročni vnosi</option>
+      </select>
+    </div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeModal('modalDcSettings')">Prekliči</button>
+      <button class="btn btn-primary" onclick="saveDcSettings()">Shrani</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DC ENTRY MODAL ═══ -->
+<div class="modal-backdrop" id="modalDcEntry">
+  <div class="modal">
+    <h3 id="dcEntryTitle">Dodaj vnos</h3>
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Datum *</label>
+        <input type="date" id="deDate">
+      </div>
+      <div class="form-row">
+        <label>Vrsta *</label>
+        <select id="deType" onchange="updateDeTypeHint()">
+          <option value="prihodek">Prihodek (+ stanje)</option>
+          <option value="odhodek">Odhodek (− stanje)</option>
+          <option value="popravek">Popravek stanja (override)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Opis *</label>
+      <input type="text" id="deDesc" placeholder="npr. Plača, najem, gotovina...">
+    </div>
+    <div class="form-row">
+      <label>Znesek (EUR) *</label>
+      <input type="number" id="deAmount" step="0.01" min="0" placeholder="0.00">
+      <div id="deTypeHint" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--green);margin-top:4px">Poveča stanje na računu</div>
+    </div>
+    <div class="form-row">
+      <label>Opomba</label>
+      <input type="text" id="deNote" placeholder="neobvezno">
+    </div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeModal('modalDcEntry')">Prekliči</button>
+      <button class="btn btn-primary" onclick="saveDcEntry()">Shrani</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ═══════════════════════════════════════════════
+// FIREBASE STORAGE LAYER
+// Nadomešča window.storage z Firebase Realtime DB
+// ═══════════════════════════════════════════════
+const STORAGE_KEY = 'payments';
+const RECEIPT_KEY = 'receipts';
+const CC_KEY = 'cc_settings';
+const CC_MANUAL_KEY = 'cc_manual';
+const DC_KEY = 'dc_settings';
+const DC_ENTRIES_KEY = 'dc_entries';
+
+let FIREBASE_URL = localStorage.getItem('placila_firebase_url') || '';
+
+// Firebase REST API wrapper — brez SDK, z timeout zaščito
+const FETCH_TIMEOUT = 5000;
+function fetchWithTimeout(url, opts = {}) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+  return fetch(url, { ...opts, signal: controller.signal })
+    .finally(() => clearTimeout(id));
+}
+
+const FB = {
+  async get(key) {
+    if (!FIREBASE_URL) return null;
+    try {
+      const res = await fetchWithTimeout(`${FIREBASE_URL}/${key}.json`);
+      if (!res.ok) return null;
+      const val = await res.json();
+      return val ? { value: typeof val === 'string' ? val : JSON.stringify(val) } : null;
+    } catch(e) { console.warn('FB.get failed:', key, e.message); return null; }
+  },
+  async set(key, value) {
+    if (!FIREBASE_URL) return null;
+    try {
+      const body = JSON.stringify(typeof value === 'string' ? value : JSON.stringify(value));
+      const res = await fetchWithTimeout(`${FIREBASE_URL}/${key}.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body
+      });
+      return res.ok;
+    } catch(e) { console.warn('FB.set failed:', key, e.message); return null; }
+  }
+};
+
+let db = { payments: [], nextId: 100 };
+let receiptsDb = { receipts: [], nextId: 200 };
+let currentTags = [];
+let editingTxId = null;
+let editingReceiptId = null;
+let sortKey = 'date';
+let sortDir = -1;
+
+async function loadData() {
+  // Always try to load from Firebase if URL is set, but never block app startup
+  if (FIREBASE_URL) {
+    try {
+      const r = await FB.get(STORAGE_KEY);
+      if (r && r.value) db = JSON.parse(r.value);
+    } catch(e) { console.warn('loadData payments:', e.message); }
+    try {
+      const r2 = await FB.get(RECEIPT_KEY);
+      if (r2 && r2.value) receiptsDb = JSON.parse(r2.value);
+    } catch(e) { console.warn('loadData receipts:', e.message); }
+  }
+  // Always ensure valid structure regardless of what happened above
+  if (!db || typeof db !== 'object' || !Array.isArray(db.payments)) db = { payments: [], nextId: 100 };
+  if (!db.nextId) db.nextId = 100;
+  if (!receiptsDb || typeof receiptsDb !== 'object' || !Array.isArray(receiptsDb.receipts)) receiptsDb = { receipts: [], nextId: 200 };
+  if (!receiptsDb.nextId) receiptsDb.nextId = 200;
+  if (db.payments.length === 0) seedData();
+  // Inject SPAR 4.5.2026 receipt if not yet present
+  if (!receiptsDb.receipts.some(r => r.store === 'Spar' && r.date === '2026-05-04')) {
+    receiptsDb.receipts.push({
+      id: receiptsDb.nextId++, store:'Spar', date:'2026-05-04', method:'Mastercard',
+      tags:['tedenski nakup','skeniran račun'],
+      items:[
+        {name:'Skuša Izola Brand 3x1',qty:1,unit:'kos',price:4.19},{name:'Smetana za kuho 3x200ml',qty:1,unit:'kos',price:3.68},
+        {name:'Koruza sladka 3x160g',qty:1,unit:'kos',price:2.39},{name:'SB Skyr 1kg',qty:1,unit:'kos',price:2.28},
+        {name:'Sardine v rastl. ol. 10',qty:2,unit:'kos',price:1.98},{name:'Spar sardele v r.ol.',qty:4,unit:'kos',price:1.19},
+        {name:'Fant za mleto meso 90',qty:2,unit:'kos',price:1.99},{name:'Sir Mozzarella Mini',qty:1,unit:'kos',price:2.69},
+        {name:'Mešan. mlečni riž',qty:2,unit:'kos',price:2.65},{name:'Vaflji sveži mehki 25',qty:1,unit:'kos',price:2.49},
+        {name:'Blazin. Bellawa 100/1',qty:1,unit:'kos',price:1.99},{name:'Spar jajca L 10/1',qty:1,unit:'kos',price:2.37},
+        {name:'Radič rdeči',qty:0.651,unit:'kg',price:2.49},{name:'Bio vrečka s/z nepovr',qty:3,unit:'kos',price:0.03},
+        {name:'Kruhek mlečni 400g OL',qty:1,unit:'kos',price:4.99},{name:'Sol morska mleta 250g',qty:1,unit:'kos',price:0.88},
+        {name:'Solata kristalka Gent',qty:0.514,unit:'kg',price:2.49},{name:'SB grozdje belo 500g',qty:1,unit:'kos',price:2.49},
+        {name:'Jabolka zlati delišes',qty:0.737,unit:'kg',price:1.79},
+      ]
+    });
+  }
+  // SPAR transaction — always inject separately (independent of receipt check)
+  if (!db.payments.some(p => p.desc && p.desc.includes('Spar') && p.date === '2026-05-04' && p.amount === 52.75)) {
+    db.payments.push({
+      id: db.nextId++,
+      date: '2026-05-04',
+      desc: 'Spar nakup',
+      cat: 'Nakupovanje',
+      method: 'Bančna kartica',
+      amount: 52.75,
+      note: 'Hipermarket SPAR Trbovlje Pilon · Račun 81261-103-452170',
+      tags: ['tedenski nakup', 'uvožen račun']
+    });
+    if (FIREBASE_URL) saveData();
+  }
+
+  // Inject Lidl 4.5.2026 receipt if not yet present
+  if (!receiptsDb.receipts.some(r => r.store === 'Lidl' && r.date === '2026-05-04')) {
+    receiptsDb.receipts.push({
+      id: receiptsDb.nextId++, store:'Lidl', date:'2026-05-04', method:'Mastercard',
+      tags:['tedenski nakup','uvožen račun','Lidl Plus'],
+      items:[
+        {name:'Jog. na gr. nač.',      qty:1,    unit:'kos', price:2.49},
+        {name:'Prote. nap. jag.',      qty:2,    unit:'kos', price:1.16},
+        {name:'Golica',                qty:2,    unit:'kos', price:2.59},
+        {name:'Proteinska mešani',     qty:3,    unit:'kos', price:1.29},
+        {name:'Zemlja',                qty:10,   unit:'kos', price:0.19},
+        {name:'Pizza žepek',           qty:3,    unit:'kos', price:0.59},
+        {name:'Palčka s pudingom',     qty:2,    unit:'kos', price:0.59},
+        {name:'Kuh. brisače',          qty:1,    unit:'kos', price:2.85},
+        {name:'Toaletni papir',        qty:1,    unit:'kos', price:3.39},
+      ]
+    });
+    // Also add as transaction if not already there
+    const lidlTxExists = db.payments.some(p => p.desc && p.desc.includes('Lidl') && p.date === '2026-05-04' && p.amount === 23.45);
+    if (!lidlTxExists) {
+      db.payments.push({
+        id: db.nextId++,
+        date: '2026-05-04',
+        desc: 'Lidl nakup',
+        cat: 'Nakupovanje',
+        method: 'Bančna kartica',
+        amount: 23.45,
+        note: 'Komenda · Lidl Plus popust -1,50 EUR',
+        tags: ['tedenski nakup','uvožen račun']
+      });
+    }
+    if (FIREBASE_URL) saveData();
+  }
+
+  // Inject IKEA 4.5.2026 receipt if not yet present
+  if (!receiptsDb.receipts.some(r => r.store === 'IKEA' && r.date === '2026-05-04')) {
+    receiptsDb.receipts.push({
+      id: receiptsDb.nextId++, store: 'IKEA', date: '2026-05-04', method: 'Mastercard',
+      tags: ['dom', 'uvožen račun', 'IKEA kartica'],
+      items: [
+        { name: 'UPPDATERA zaboj 24x1', qty: 8,  unit: 'kos', price: 2.99 },
+        { name: 'ISTAD N vč zip 6/4.5l', qty: 1, unit: 'kos', price: 4.99 },
+        { name: 'ISTAD N vč zip 2.5/1l', qty: 1, unit: 'kos', price: 2.99 },
+        { name: 'ISTAD vč zip 1/0.4l',   qty: 1, unit: 'kos', price: 2.49 },
+      ]
+    });
+    const ikeaTxExists = db.payments.some(p => p.desc && p.desc.includes('IKEA') && p.date === '2026-05-04' && p.amount === 34.39);
+    if (!ikeaTxExists) {
+      db.payments.push({
+        id: db.nextId++,
+        date: '2026-05-04',
+        desc: 'IKEA nakup',
+        cat: 'Nakupovanje',
+        method: 'Kreditna kartica',
+        amount: 34.39,
+        note: 'Račun 528-24-154851 · IKEA kartica ****4818',
+        tags: ['dom', 'uvožen račun']
+      });
+    }
+    if (FIREBASE_URL) saveData();
+  }
+}
+
+async function saveData() {
+  if (!FIREBASE_URL) return;
+  try {
+    await FB.set(STORAGE_KEY, JSON.stringify(db));
+    await FB.set(RECEIPT_KEY, JSON.stringify(receiptsDb));
+    const ts = document.getElementById('lastSync');
+    if (ts) ts.textContent = new Date().toLocaleTimeString('sl-SI', {hour:'2-digit',minute:'2-digit'});
+    const si = document.getElementById('syncIndicator');
+    if (si) { si.style.color = 'var(--green)'; setTimeout(() => { si.style.color = ''; }, 2000); }
+  } catch(e) { console.error('Save error', e); }
+}
+
+async function syncData() {
+  showStatus('Nalagam...');
+  await loadData();
+  await loadCcData();
+  await loadDcData();
+  renderAll();
+  showStatus('Podatki osveženi ✓');
+}
+
+function renderAll() {
+  renderTx();
+  document.getElementById('cnt-transactions').textContent = db.payments.length;
+  document.getElementById('cnt-store').textContent = receiptsDb.receipts.length;
+  document.getElementById('cnt-installments').textContent = db.payments.filter(p=>p.method==='Kreditna kartica'&&p.installments>0).length;
+}
+
+// ═══════════════════════════════════════════════
+// SEED DATA
+// ═══════════════════════════════════════════════
+function seedData() {
+  const raw = [
+    {date:'2026-05-04',desc:'IKEA nakup',cat:'Nakupovanje',method:'Bančna kartica',amount:0,note:'Maj 2026',tags:['dom']},
+    {date:'2026-05-02',desc:'Microsoft 365',cat:'Naročnina',method:'PayPal',amount:20.99,note:'',tags:['mesečno']},
+    {date:'2026-04-30',desc:'Parkiranje Novigrad – 1h',cat:'Parkiranje',method:'Bančna kartica',amount:1.25,note:'1 ura Zona 2',tags:['potovanje']},
+    {date:'2026-04-29',desc:'Parkiranje Novigrad – 2h',cat:'Parkiranje',method:'Bančna kartica',amount:2.50,note:'2 uri Zona 2',tags:['potovanje']},
+    {date:'2026-04-28',desc:'Parkiranje Novigrad – 2h',cat:'Parkiranje',method:'Bančna kartica',amount:2.50,note:'',tags:['potovanje']},
+    {date:'2026-04-27',desc:'Parkiranje Krk – 2h',cat:'Parkiranje',method:'Bančna kartica',amount:2.50,note:'Zona 1',tags:['potovanje']},
+    {date:'2026-04-26',desc:'Parkiranje Malinska – 2h',cat:'Parkiranje',method:'Bančna kartica',amount:2.50,note:'Zona 1',tags:['potovanje']},
+    {date:'2026-04-25',desc:'Gremo na Elektriko',cat:'Elektrika',method:'Bančna kartica',amount:0,note:'Polnjenje EV',tags:['avto','EV']},
+    {date:'2026-04-24',desc:'Claude Pro (Anthropic)',cat:'Naročnina',method:'Kreditna kartica',amount:21.96,note:'Apr–Maj 2026 · kartica 7852',tags:['AI','mesečno'],installments:6},
+    {date:'2026-04-24',desc:'HoT mobil',cat:'Mobitel',method:'PayPal',amount:10.00,note:'',tags:['mesečno']},
+    {date:'2026-04-16',desc:'ARTPRO foto',cat:'Nakupovanje',method:'Bančna kartica',amount:0,note:'Foto storitev',tags:['foto']},
+    {date:'2026-04-15',desc:'SkyShowtime',cat:'Streaming',method:'PayPal',amount:4.49,note:'',tags:['mesečno']},
+    {date:'2026-04-13',desc:'Netflix',cat:'Streaming',method:'PayPal',amount:9.99,note:'',tags:['mesečno']},
+    {date:'2026-04-09',desc:'Glasbena šola Trbovlje',cat:'Šola',method:'Bančna kartica',amount:0,note:'E-račun 873',tags:['otroci']},
+    {date:'2026-04-06',desc:'IONITY naročnina',cat:'Elektrika',method:'Kreditna kartica',amount:17.99,note:'Mesečna',tags:['avto','EV'],installments:0},
+    {date:'2026-04-05',desc:'HoT mobil',cat:'Mobitel',method:'PayPal',amount:5.00,note:'',tags:[]},
+    {date:'2026-03-30',desc:'Eventim vstopnica',cat:'Vstopnice/dogodki',method:'Bančna kartica',amount:0,note:'',tags:['kultura']},
+    {date:'2026-03-27',desc:'FightShop.si',cat:'Nakupovanje',method:'Bančna kartica',amount:0,note:'',tags:['šport']},
+    {date:'2026-03-22',desc:'HoT mobil',cat:'Mobitel',method:'PayPal',amount:5.00,note:'',tags:[]},
+    {date:'2026-03-21',desc:'Ansy Cosmetics',cat:'Nakupovanje',method:'PayPal',amount:20.58,note:'Sparkly Diva',tags:[]},
+    {date:'2026-03-15',desc:'SkyShowtime',cat:'Streaming',method:'PayPal',amount:4.49,note:'',tags:['mesečno']},
+    {date:'2026-03-14',desc:'IKEA nakup',cat:'Nakupovanje',method:'Bančna kartica',amount:0,note:'',tags:['dom']},
+    {date:'2026-03-13',desc:'Netflix',cat:'Streaming',method:'PayPal',amount:9.99,note:'',tags:['mesečno']},
+    {date:'2026-03-08',desc:'HoT mobil',cat:'Mobitel',method:'PayPal',amount:5.00,note:'',tags:[]},
+    {date:'2026-03-07',desc:'Parkiranje Novigrad – 2h',cat:'Parkiranje',method:'Bančna kartica',amount:2.50,note:'',tags:[]},
+    {date:'2026-03-05',desc:'Eventim vstopnice',cat:'Vstopnice/dogodki',method:'PayPal',amount:145.26,note:'',tags:['kultura']},
+    {date:'2026-02-15',desc:'SkyShowtime',cat:'Streaming',method:'PayPal',amount:3.99,note:'',tags:['mesečno']},
+    {date:'2026-02-13',desc:'Netflix',cat:'Streaming',method:'PayPal',amount:9.99,note:'',tags:['mesečno']},
+    {date:'2026-02-13',desc:'HoT mobil',cat:'Mobitel',method:'PayPal',amount:5.00,note:'',tags:[]},
+    {date:'2026-01-20',desc:'Šivana Ivan Škoflek',cat:'Nakupovanje',method:'PayPal',amount:19.19,note:'',tags:[]},
+    {date:'2026-01-15',desc:'HoT mobil',cat:'Mobitel',method:'PayPal',amount:5.00,note:'',tags:[]},
+    {date:'2026-01-15',desc:'SkyShowtime',cat:'Streaming',method:'PayPal',amount:3.99,note:'',tags:['mesečno']},
+    {date:'2025-12-19',desc:'Bonami.cz',cat:'Nakupovanje',method:'PayPal',amount:85.59,note:'',tags:['dom']},
+    {date:'2025-12-15',desc:'SkyShowtime',cat:'Streaming',method:'PayPal',amount:3.99,note:'',tags:['mesečno']},
+    {date:'2025-12-10',desc:'HoT mobil',cat:'Mobitel',method:'PayPal',amount:5.00,note:'',tags:[]},
+    {date:'2025-12-06',desc:'IKEA nakup',cat:'Nakupovanje',method:'Bančna kartica',amount:0,note:'',tags:['dom']},
+    {date:'2025-12-01',desc:'Eventim vstopnice',cat:'Vstopnice/dogodki',method:'PayPal',amount:208.26,note:'',tags:['kultura']},
+    {date:'2025-11-25',desc:'Brevillier Urban',cat:'Nakupovanje',method:'PayPal',amount:24.77,note:'Supersticks',tags:[]},
+    {date:'2025-11-21',desc:'Eventim vstopnice',cat:'Vstopnice/dogodki',method:'PayPal',amount:82.29,note:'',tags:['kultura']},
+    {date:'2025-11-18',desc:'GA+kuhinje račun',cat:'Nakupovanje',method:'Kreditna kartica',amount:1850.00,note:'Kuhinja',tags:['dom','velik nakup'],installments:24},
+    {date:'2025-11-15',desc:'SkyShowtime',cat:'Streaming',method:'PayPal',amount:3.99,note:'',tags:['mesečno']},
+    {date:'2025-11-02',desc:'Eventim vstopnice',cat:'Vstopnice/dogodki',method:'PayPal',amount:50.00,note:'',tags:['kultura']},
+    {date:'2025-10-24',desc:'Eventim vstopnice',cat:'Vstopnice/dogodki',method:'PayPal',amount:186.75,note:'',tags:['kultura']},
+    {date:'2025-10-23',desc:'HoT mobil',cat:'Mobitel',method:'PayPal',amount:5.00,note:'',tags:[]},
+    {date:'2025-10-15',desc:'SkyShowtime',cat:'Streaming',method:'PayPal',amount:3.99,note:'',tags:['mesečno']},
+    {date:'2025-09-22',desc:'Skinfairytale d.o.o.',cat:'Nakupovanje',method:'PayPal',amount:26.52,note:'',tags:[]},
+    {date:'2025-09-21',desc:'Sirio Store (Italija)',cat:'Nakupovanje',method:'PayPal',amount:49.70,note:'',tags:['tujina']},
+    {date:'2025-09-15',desc:'SkyShowtime',cat:'Streaming',method:'PayPal',amount:3.99,note:'',tags:['mesečno']},
+    {date:'2025-09-04',desc:'Elmint d.o.o.',cat:'Nakupovanje',method:'PayPal',amount:14.84,note:'',tags:[]},
+  ];
+  db.payments = raw.map((p,i) => ({ id: i+1, ...p }));
+  db.nextId = raw.length + 2;
+
+  // Seed some store receipts
+  receiptsDb.receipts = [
+    {id:1, store:'Mercator', date:'2026-05-01', method:'Bančna kartica', tags:['tedenski nakup'],
+     items:[{name:'Mleko 1L',qty:2,unit:'kos',price:1.29},{name:'Kruh 500g',qty:1,unit:'kos',price:1.49},{name:'Maslo 250g',qty:1,unit:'kos',price:2.89},{name:'Jajca 10x',qty:1,unit:'kos',price:3.19},{name:'Jogurt Pomurka',qty:3,unit:'kos',price:0.79}]},
+    {id:2, store:'Spar', date:'2026-04-28', method:'Bančna kartica', tags:['tedenski nakup'],
+     items:[{name:'Mleko 1L',qty:2,unit:'kos',price:1.19},{name:'Kruh 500g',qty:1,unit:'kos',price:1.39},{name:'Maslo 250g',qty:1,unit:'kos',price:3.09},{name:'Piščančja prsa 500g',qty:1,unit:'kos',price:4.49},{name:'Paradižnik 1kg',qty:1,unit:'kg',price:2.19}]},
+    {id:3, store:'Lidl', date:'2026-04-15', method:'Gotovina', tags:['akcija'],
+     items:[{name:'Mleko 1L',qty:3,unit:'kos',price:0.99},{name:'Maslo 250g',qty:2,unit:'kos',price:2.49},{name:'Jajca 10x',qty:2,unit:'kos',price:2.79},{name:'Testenine 500g',qty:2,unit:'kos',price:0.89},{name:'Paradižnik 1kg',qty:1,unit:'kg',price:1.89}]},
+    {id:4, store:'Hofer', date:'2026-03-20', method:'Gotovina', tags:[],
+     items:[{name:'Mleko 1L',qty:2,unit:'kos',price:0.95},{name:'Kruh 500g',qty:2,unit:'kos',price:1.19},{name:'Jajca 10x',qty:1,unit:'kos',price:2.69},{name:'Paradižnik 1kg',qty:2,unit:'kg',price:1.79},{name:'Sok pomaranča 1L',qty:2,unit:'kos',price:0.99}]},
+    {id:5, store:'Spar', date:'2026-05-04', method:'Mastercard', tags:['tedenski nakup','skeniran račun'],
+     items:[
+       {name:'Skuša Izola Brand 3x1',qty:1,unit:'kos',price:4.19},{name:'Smetana za kuho 3x200ml',qty:1,unit:'kos',price:3.68},
+       {name:'Koruza sladka 3x160g',qty:1,unit:'kos',price:2.39},{name:'SB Skyr 1kg',qty:1,unit:'kos',price:2.28},
+       {name:'Sardine v rastl. ol. 10',qty:2,unit:'kos',price:1.98},{name:'Spar sardele v r.ol.',qty:4,unit:'kos',price:1.19},
+       {name:'Fant za mleto meso 90',qty:2,unit:'kos',price:1.99},{name:'Sir Mozzarella Mini',qty:1,unit:'kos',price:2.69},
+       {name:'Mešan. mlečni riž',qty:2,unit:'kos',price:2.65},{name:'Vaflji sveži mehki 25',qty:1,unit:'kos',price:2.49},
+       {name:'Blazin. Bellawa 100/1',qty:1,unit:'kos',price:1.99},{name:'Spar jajca L 10/1',qty:1,unit:'kos',price:2.37},
+       {name:'Radič rdeči',qty:0.651,unit:'kg',price:2.49},{name:'Bio vrečka s/z nepovr',qty:3,unit:'kos',price:0.03},
+       {name:'Kruhek mlečni 400g OL',qty:1,unit:'kos',price:4.99},{name:'Sol morska mleta 250g',qty:1,unit:'kos',price:0.88},
+       {name:'Solata kristalka Gent',qty:0.514,unit:'kg',price:2.49},{name:'SB grozdje belo 500g',qty:1,unit:'kos',price:2.49},
+       {name:'Jabolka zlati delišes',qty:0.737,unit:'kg',price:1.79},
+     ]},
+    {id:6, store:'Lidl', date:'2026-05-04', method:'Mastercard', tags:['tedenski nakup','uvožen račun','Lidl Plus'],
+     items:[
+       {name:'Jog. na gr. nač.',   qty:1,  unit:'kos', price:2.49},
+       {name:'Prote. nap. jag.',   qty:2,  unit:'kos', price:1.16},
+       {name:'Golica',             qty:2,  unit:'kos', price:2.59},
+       {name:'Proteinska mešani',  qty:3,  unit:'kos', price:1.29},
+       {name:'Zemlja',             qty:10, unit:'kos', price:0.19},
+       {name:'Pizza žepek',        qty:3,  unit:'kos', price:0.59},
+       {name:'Palčka s pudingom',  qty:2,  unit:'kos', price:0.59},
+       {name:'Kuh. brisače',       qty:1,  unit:'kos', price:2.85},
+       {name:'Toaletni papir',     qty:1,  unit:'kos', price:3.39},
+     ]},
+    {id:7, store:'IKEA', date:'2026-05-04', method:'Mastercard', tags:['dom','uvožen račun','IKEA kartica'],
+     items:[
+       {name:'UPPDATERA zaboj 24x1',  qty:8, unit:'kos', price:2.99},
+       {name:'ISTAD N vč zip 6/4.5l', qty:1, unit:'kos', price:4.99},
+       {name:'ISTAD N vč zip 2.5/1l', qty:1, unit:'kos', price:2.99},
+       {name:'ISTAD vč zip 1/0.4l',   qty:1, unit:'kos', price:2.49},
+     ]},
+  ];
+  receiptsDb.nextId = 30;
+  // Note: saveData() is called externally only when Firebase is connected
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+let currentPage = 'transactions';
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('nav-' + page).classList.add('active');
+  currentPage = page;
+  const titles = {transactions:'Transakcije',analytics:'Analitika',installments:'Obroki',creditcard:'Kreditna kartica',debitcard:'Bančna kartica',store:'Trgovina',scan:'Uvoz računov'};
+  document.getElementById('topbarTitle').textContent = titles[page];
+  if (page === 'analytics') renderCharts();
+  if (page === 'installments') renderInstallments();
+  if (page === 'creditcard') renderCreditCard();
+  if (page === 'debitcard') renderDebitCard();
+  if (page === 'store') renderStore();
+  if (page === 'scan') renderScanHistory();
+  closeSidebar();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════
+function fmtAmt(a) { return a > 0 ? '€' + a.toFixed(2) : '—'; }
+function fmtDate(d) {
+  const [y,m,dy] = d.split('-');
+  return dy + '. ' + m + '. ' + y;
+}
+function methodBadge(m) {
+  const map = {'Bančna kartica':'badge-debit','Kreditna kartica':'badge-credit','PayPal':'badge-paypal','Gotovina':'badge-cash'};
+  return `<span class="badge ${map[m]||'badge-debit'}">${m}</span>`;
+}
+function catBadge(c) {
+  const map = {'Streaming':'cat-streaming','Elektrika':'cat-electric','Mobitel':'cat-mobile','Parkiranje':'cat-parking','Vstopnice/dogodki':'cat-events','Nakupovanje':'cat-shopping','Naročnina':'cat-subscription','Šola':'cat-school','Hrana/restavracija':'cat-food','Zdravje':'cat-health','Gorivo':'cat-fuel'};
+  return `<span class="cat-badge ${map[c]||'cat-other'}">${c}</span>`;
+}
+function tagHtml(tags) {
+  if (!tags || !tags.length) return '<span style="color:var(--text3);font-size:11px">—</span>';
+  return tags.map(t => `<span class="tag">${t}</span>`).join(' ');
+}
+function showStatus(msg, duration=2500) {
+  const sb = document.getElementById('statusBar');
+  sb.textContent = msg;
+  sb.classList.add('show');
+  setTimeout(() => sb.classList.remove('show'), duration);
+}
+
+// ═══════════════════════════════════════════════
+// TRANSACTIONS
+// ═══════════════════════════════════════════════
+function getFiltered() {
+  let data = [...db.payments];
+  const q = document.getElementById('txSearch').value.toLowerCase();
+  const yr = document.getElementById('txYear').value;
+  const mo = document.getElementById('txMonth').value;
+  const mt = document.getElementById('txMethod').value;
+  const ct = document.getElementById('txCat').value;
+  if (q) data = data.filter(p => p.desc.toLowerCase().includes(q) || (p.note||'').toLowerCase().includes(q) || (p.tags||[]).some(t => t.toLowerCase().includes(q)));
+  if (yr && mo) data = data.filter(p => p.date.startsWith(yr + '-' + mo));
+  else if (yr) data = data.filter(p => p.date.startsWith(yr));
+  if (mt) data = data.filter(p => p.method === mt);
+  if (ct) data = data.filter(p => p.cat === ct);
+  data.sort((a,b) => {
+    let va = a[sortKey], vb = b[sortKey];
+    if (sortKey === 'amount') { va = va||0; vb = vb||0; }
+    if (va < vb) return -sortDir;
+    if (va > vb) return sortDir;
+    return 0;
+  });
+  return data;
+}
+
+function onYearChange() {
+  const yr = document.getElementById('txYear').value;
+  const moEl = document.getElementById('txMonth');
+  moEl.style.display = yr ? 'inline-block' : 'none';
+  if (!yr) moEl.value = '';
+  renderTx();
+}
+
+let sortBy = 'date', sortAsc = false;
+function setSort(key) {
+  if (sortKey === key) sortDir *= -1;
+  else { sortKey = key; sortDir = -1; }
+  renderTx();
+}
+
+function renderTx() {
+  const data = getFiltered();
+  const tbody = document.getElementById('txBody');
+  document.getElementById('txEmpty').style.display = data.length ? 'none' : 'block';
+  if (!data.length) { tbody.innerHTML = ''; return; }
+  tbody.innerHTML = data.map(p => `
+    <tr>
+      <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);white-space:nowrap">${fmtDate(p.date)}</td>
+      <td>
+        <div style="font-weight:500;font-size:13px">${p.desc}</div>
+        ${p.note ? `<div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace">${p.note}</div>` : ''}
+        ${p.installments > 0 ? `<span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--purple)">▸ ${p.installments} obrokov</span>` : ''}
+      </td>
+      <td>${catBadge(p.cat)}</td>
+      <td><div class="flex-gap">${tagHtml(p.tags)}</div></td>
+      <td>${methodBadge(p.method)}</td>
+      <td class="amount-cell ${!p.amount ? 'zero' : ''}">${fmtAmt(p.amount)}</td>
+      <td>
+        <div class="action-btns">
+          <button class="btn btn-sm btn-ghost" onclick="openEditModal(${p.id})">uredi</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteTx(${p.id})">✕</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  // Metrics
+  const total = data.filter(p=>p.amount>0).reduce((s,p)=>s+p.amount,0);
+  const cnt = data.length;
+  const byMethod = (m) => data.filter(p=>p.method===m&&p.amount>0).reduce((s,p)=>s+p.amount,0);
+  document.getElementById('txMetrics').innerHTML = `
+    <div class="metric-card"><div class="metric-label">Skupaj (znani)</div><div class="metric-value">€${total.toFixed(2)}</div><div class="metric-sub">${cnt} transakcij</div></div>
+    <div class="metric-card"><div class="metric-label">Kreditna kartica</div><div class="metric-value">€${byMethod('Kreditna kartica').toFixed(2)}</div><div class="metric-sub">${data.filter(p=>p.method==='Kreditna kartica').length} transakcij</div></div>
+    <div class="metric-card"><div class="metric-label">PayPal</div><div class="metric-value">€${byMethod('PayPal').toFixed(2)}</div><div class="metric-sub">${data.filter(p=>p.method==='PayPal').length} transakcij</div></div>
+    <div class="metric-card"><div class="metric-label">Bančna kartica</div><div class="metric-value">€${byMethod('Bančna kartica').toFixed(2)}</div><div class="metric-sub">${data.filter(p=>p.method==='Bančna kartica').length} transakcij</div></div>
+  `;
+  document.getElementById('cnt-transactions').textContent = db.payments.length;
+  document.getElementById('cnt-installments').textContent = db.payments.filter(p=>p.method==='Kreditna kartica'&&p.installments>0).length;
+}
+
+function deleteTx(id) {
+  if (!confirm('Izbriši to plačilo?')) return;
+  db.payments = db.payments.filter(p => p.id !== id);
+  saveData(); renderTx();
+  showStatus('Plačilo izbrisano');
+}
+
+// ═══════════════════════════════════════════════
+// ADD / EDIT MODAL
+// ═══════════════════════════════════════════════
+function openAddModal() {
+  editingTxId = null;
+  currentTags = [];
+  document.getElementById('modalTxTitle').textContent = 'Dodaj plačilo';
+  document.getElementById('fDesc').value = '';
+  document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('fAmount').value = '';
+  document.getElementById('fMethod').value = 'Bančna kartica';
+  document.getElementById('fCat').value = 'Nakupovanje';
+  document.getElementById('fNote').value = '';
+  document.getElementById('fInstallments').value = '12';
+  renderTagInputWrap();
+  updateInstCalc();
+  document.getElementById('modalTx').classList.add('open');
+  setTimeout(() => document.getElementById('fDesc').focus(), 50);
+}
+
+function openEditModal(id) {
+  const p = db.payments.find(x => x.id === id);
+  if (!p) return;
+  editingTxId = id;
+  currentTags = [...(p.tags||[])];
+  document.getElementById('modalTxTitle').textContent = 'Uredi plačilo';
+  document.getElementById('fDesc').value = p.desc;
+  document.getElementById('fDate').value = p.date;
+  document.getElementById('fAmount').value = p.amount || '';
+  document.getElementById('fMethod').value = p.method;
+  document.getElementById('fCat').value = p.cat;
+  document.getElementById('fNote').value = p.note || '';
+  document.getElementById('fInstallments').value = p.installments || 12;
+  renderTagInputWrap();
+  updateInstCalc();
+  document.getElementById('modalTx').classList.add('open');
+}
+
+function saveTx() {
+  const desc = document.getElementById('fDesc').value.trim();
+  if (!desc) { showStatus('Vnesi opis!'); return; }
+  const method = document.getElementById('fMethod').value;
+  const amt = parseFloat(document.getElementById('fAmount').value) || 0;
+  const inst = parseInt(document.getElementById('fInstallments').value) || 0;
+  const p = {
+    id: editingTxId || db.nextId++,
+    date: document.getElementById('fDate').value,
+    desc,
+    cat: document.getElementById('fCat').value,
+    method,
+    amount: amt,
+    note: document.getElementById('fNote').value.trim(),
+    tags: [...currentTags],
+  };
+  if (method === 'Kreditna kartica') p.installments = inst;
+  if (editingTxId) {
+    const idx = db.payments.findIndex(x => x.id === editingTxId);
+    if (idx >= 0) db.payments[idx] = p;
+  } else {
+    db.payments.push(p);
+  }
+  saveData(); closeModal('modalTx'); renderTx();
+  showStatus(editingTxId ? 'Plačilo posodobljeno' : 'Plačilo dodano ✓');
+}
+
+// ═══════════════════════════════════════════════
+// TAGS
+// ═══════════════════════════════════════════════
+function renderTagInputWrap() {
+  const wrap = document.getElementById('tagInputWrap');
+  const existing = currentTags.map(t =>
+    `<span class="tag">${t}<button class="tag-remove" onclick="removeTag('${t}')">×</button></span>`
+  ).join('');
+  wrap.innerHTML = existing + `<input type="text" id="tagInput" placeholder="${currentTags.length?'':'Dodaj tag...'}" onkeydown="handleTagInput(event)" style="border:none;background:none;outline:none;font-family:'Syne',sans-serif;font-size:13px;color:var(--text);min-width:80px;flex:1;padding:0">`;
+}
+function handleTagInput(e) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = e.target.value.trim().replace(/,/g,'');
+    if (val && !currentTags.includes(val)) { currentTags.push(val); }
+    renderTagInputWrap();
+    document.getElementById('tagInput').focus();
+  }
+  if (e.key === 'Backspace' && e.target.value === '' && currentTags.length > 0) {
+    currentTags.pop(); renderTagInputWrap();
+    setTimeout(() => document.getElementById('tagInput').focus(), 0);
+  }
+}
+function removeTag(t) { currentTags = currentTags.filter(x => x !== t); renderTagInputWrap(); }
+
+function updateInstCalc() {
+  const m = document.getElementById('fMethod').value;
+  const box = document.getElementById('instCalcBox');
+  box.style.display = m === 'Kreditna kartica' ? 'block' : 'none';
+  const amt = parseFloat(document.getElementById('fAmount').value) || 0;
+  const n = parseInt(document.getElementById('fInstallments').value) || 0;
+  if (n > 0 && amt > 0) {
+    const fee = Math.max(0, n - 1) * 1.60;
+    const total = amt + fee;
+    const monthly = total / n;
+    const feeNote = n === 1 ? 'Brez provizije (1 obrok)' : `Provizija: €${fee.toFixed(2)} (${n-1}× 1,60 EUR od 2. obroka)`;
+    document.getElementById('instCalcText').textContent =
+      `Skupaj: €${total.toFixed(2)} · Mesečni obrok: €${monthly.toFixed(2)} · ${feeNote}`;
+  } else {
+    document.getElementById('instCalcText').textContent = '';
+  }
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('modal-backdrop')) e.target.classList.remove('open');
+});
+
+// ═══════════════════════════════════════════════
+// ANALYTICS
+// ═══════════════════════════════════════════════
+let chartMRef=null, chartCRef=null, chartMoRef=null;
+
+function renderCharts() {
+  const allYear = document.getElementById('analyticsYear').value;
+  let data = db.payments.filter(p => p.amount > 0);
+  if (allYear !== 'both') data = data.filter(p => p.date.startsWith(allYear));
+
+  const total = data.reduce((s,p)=>s+p.amount,0);
+  const t2025 = db.payments.filter(p=>p.date.startsWith('2025')&&p.amount>0).reduce((s,p)=>s+p.amount,0);
+  const t2026 = db.payments.filter(p=>p.date.startsWith('2026')&&p.amount>0).reduce((s,p)=>s+p.amount,0);
+
+  document.getElementById('analyticsMetrics').innerHTML = `
+    <div class="metric-card"><div class="metric-label">Skupaj (filtrirano)</div><div class="metric-value">€${total.toFixed(2)}</div></div>
+    <div class="metric-card"><div class="metric-label">2025</div><div class="metric-value">€${t2025.toFixed(2)}</div></div>
+    <div class="metric-card"><div class="metric-label">2026</div><div class="metric-value">€${t2026.toFixed(2)}</div></div>
+    <div class="metric-card"><div class="metric-label">Povpr. mesečno</div><div class="metric-value">€${(total/Math.max(1,new Set(data.map(p=>p.date.slice(0,7))).size)).toFixed(0)}</div></div>
+  `;
+
+  const methods = ['Bančna kartica','Kreditna kartica','PayPal','Gotovina'];
+  const mTotals = methods.map(m => data.filter(p=>p.method===m).reduce((s,p)=>s+p.amount,0));
+  const cats = ['Streaming','Elektrika','Mobitel','Parkiranje','Vstopnice/dogodki','Nakupovanje','Naročnina','Šola','Hrana/restavracija','Zdravje','Gorivo','Drugo'];
+  const cTotals = cats.map(c => data.filter(p=>p.cat===c).reduce((s,p)=>s+p.amount,0));
+
+  if(chartMRef) chartMRef.destroy();
+  chartMRef = new Chart(document.getElementById('chartMethod'), {
+    type:'doughnut',
+    data:{labels:methods,datasets:[{data:mTotals,backgroundColor:['#B5D4F4','#CECBF6','#9FE1CB','#C0DD97'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:6}}}}
+  });
+
+  if(chartCRef) chartCRef.destroy();
+  chartCRef = new Chart(document.getElementById('chartCat'), {
+    type:'bar',
+    data:{labels:cats,datasets:[{data:cTotals,backgroundColor:'#AFA9EC',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9},maxRotation:45,autoSkip:false}},y:{ticks:{callback:v=>'€'+v}}}}
+  });
+
+  const months = ['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Avg','Sep','Okt','Nov','Dec'];
+  const datasets = [];
+  const years = allYear==='both' ? ['2025','2026'] : [allYear];
+  const colors = {'2024':'#E9B84A','2025':'#7F77DD','2026':'#1D9E75'};
+  years.forEach(yr => {
+    datasets.push({
+      label:yr,
+      data:months.map((_,i)=>{const m=String(i+1).padStart(2,'0'); return db.payments.filter(p=>p.date.startsWith(yr+'-'+m)&&p.amount>0).reduce((s,p)=>s+p.amount,0);}),
+      borderColor:colors[yr]||'#888',tension:0.3,fill:false,pointRadius:3
+    });
+  });
+  if(chartMoRef) chartMoRef.destroy();
+  chartMoRef = new Chart(document.getElementById('chartMonthly'), {
+    type:'line',
+    data:{labels:months,datasets},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{font:{size:11}}}},scales:{y:{ticks:{callback:v=>'€'+v}}}}
+  });
+}
+
+// ═══════════════════════════════════════════════
+// INSTALLMENTS
+// ═══════════════════════════════════════════════
+function renderInstallments() {
+  const data = db.payments.filter(p=>p.method==='Kreditna kartica'&&p.installments>0&&p.amount>0);
+  const tbody = document.getElementById('instBody');
+  document.getElementById('instEmpty').style.display = data.length ? 'none' : 'block';
+  if (!data.length) { tbody.innerHTML=''; return; }
+  const today = new Date();
+  tbody.innerHTML = data.map(p => {
+    const fee = Math.max(0, p.installments - 1) * 1.60;
+    const total = p.amount + fee;
+    const monthly = total / p.installments;
+    const start = new Date(p.date);
+    let paid = 0, d = new Date(start);
+    while (d <= today && paid < p.installments) { paid++; d.setMonth(d.getMonth()+1); }
+    const pct = Math.round((paid/p.installments)*100);
+    const remaining = p.installments - paid;
+    const remAmt = remaining * monthly;
+    return `
+      <tr>
+        <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${fmtDate(p.date)}</td>
+        <td><div style="font-weight:500">${p.desc}</div><div style="font-size:11px;color:var(--text3)">${p.note||''}</div></td>
+        <td class="amount-cell">€${p.amount.toFixed(2)}</td>
+        <td class="text-right text-mono" style="font-size:12px">${p.installments}x</td>
+        <td class="amount-cell">€${monthly.toFixed(2)}</td>
+        <td>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:3px">${paid}/${p.installments} plačano</div>
+          <div class="inst-progress"><div class="inst-progress-bar" style="width:${pct}%"></div></div>
+        </td>
+        <td class="amount-cell" style="color:${remaining>0?'var(--accent-dark)':'var(--green)'}">${remaining>0?'€'+remAmt.toFixed(2):'Plačano ✓'}</td>
+        <td><button class="btn btn-sm btn-ghost" onclick="openEditModal(${p.id})">uredi</button></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+// STORE
+// ═══════════════════════════════════════════════
+let storeTabActive = 'receipts';
+function switchStoreTab(tab) {
+  storeTabActive = tab;
+  document.querySelectorAll('.section-tab').forEach((t,i) => t.classList.toggle('active', i===(tab==='receipts'?0:1)));
+  document.getElementById('storeReceipts').style.display = tab==='receipts' ? 'block' : 'none';
+  document.getElementById('storeCompare').style.display = tab==='compare' ? 'block' : 'none';
+  if (tab==='compare') renderCompare();
+}
+
+function getStoreFilter() { return document.getElementById('storeFilter')?.value || ''; }
+function renderStore() {
+  const search = (document.getElementById('storeSearch')?.value||'').toLowerCase();
+  const sf = getStoreFilter();
+
+  // Update store filter options
+  const stores = [...new Set(receiptsDb.receipts.map(r=>r.store))].sort();
+  const sfEl = document.getElementById('storeFilter');
+  const cur = sfEl.value;
+  sfEl.innerHTML = '<option value="">Vse trgovine</option>' + stores.map(s=>`<option ${s===cur?'selected':''}>${s}</option>`).join('');
+
+  let data = receiptsDb.receipts;
+  if (sf) data = data.filter(r=>r.store===sf);
+  if (search) data = data.filter(r=>r.store.toLowerCase().includes(search)||r.items.some(i=>i.name.toLowerCase().includes(search)));
+
+  document.getElementById('storeEmpty').style.display = data.length ? 'none' : 'block';
+  document.getElementById('cnt-store').textContent = receiptsDb.receipts.length;
+
+  document.getElementById('receiptGrid').innerHTML = data.sort((a,b)=>b.date.localeCompare(a.date)).map(r => {
+    const total = r.items.reduce((s,i)=>s+i.price*i.qty,0);
+    const preview = r.items.slice(0,4);
+    return `
+      <div class="receipt-card" onclick="openReceiptDetail(${r.id})">
+        <div class="receipt-card-head">
+          <div>
+            <div class="receipt-store">${r.store}</div>
+            <div class="receipt-date">${fmtDate(r.date)} · ${r.method}</div>
+            <div class="flex-gap" style="margin-top:5px">${(r.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="receipt-total">€${total.toFixed(2)}</div>
+            <div style="display:flex;gap:4px;margin-top:6px;justify-content:flex-end">
+              <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();openEditReceipt(${r.id})">uredi</button>
+              <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteReceipt(${r.id})">✕</button>
+            </div>
+          </div>
+        </div>
+        <div class="receipt-items">
+          ${preview.map(i=>`
+            <div class="receipt-item-row">
+              <span class="item-name">${i.name}</span>
+              <span class="item-qty">${i.qty % 1 === 0 ? i.qty : i.qty} ${i.unit||'kos'}</span>
+              <span class="item-price">€${(i.price*i.qty).toFixed(2)}</span>
+            </div>
+          `).join('')}
+          ${r.items.length>4?`<div style="font-size:11px;color:var(--accent);font-family:'DM Mono',monospace;padding-top:6px;cursor:pointer">↗ Klikni za vse ${r.items.length} artiklov</div>`:''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openReceiptDetail(id) {
+  const r = receiptsDb.receipts.find(x => x.id === id);
+  if (!r) return;
+  const total = r.items.reduce((s,i) => s + i.price * i.qty, 0);
+  document.getElementById('rdStoreName').textContent = r.store;
+  document.getElementById('rdMeta').textContent = fmtDate(r.date) + ' · ' + r.method + ' · ' + r.items.length + ' artiklov';
+  document.getElementById('rdTags').innerHTML = (r.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('');
+  document.getElementById('rdTotal').textContent = '€' + total.toFixed(2);
+
+  // All items with subtotals, alternating rows
+  const subtotal = r.items.reduce((s,i) => s + i.price * i.qty, 0);
+  document.getElementById('rdItemsList').innerHTML = r.items.map((item, idx) => {
+    const unit = item.unit || (item.qty !== Math.round(item.qty) ? 'kg' : 'kos');
+    const lineTotal = item.price * item.qty;
+    const isWeighted = ['kg','dag','g','l','dl','ml'].includes(unit);
+    const qtyLabel = isWeighted
+      ? (item.qty < 1 ? (item.qty * 1000).toFixed(0) + (unit==='kg'?'dag':unit==='l'?'ml':'') : item.qty + ' ' + unit)
+      : item.qty + ' ' + unit;
+    const unitPriceLabel = isWeighted ? `€${item.price.toFixed(2)}/${unit}` : '';
+    return `
+      <div style="display:grid;grid-template-columns:1fr auto auto;gap:0;padding:9px 0;border-bottom:1px solid var(--border);${idx%2===0?'':'background:var(--surface2);margin:0 -4px;padding:9px 4px;'}">
+        <div>
+          <div style="font-size:13px">${item.name}</div>
+          ${unitPriceLabel ? `<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)">${unitPriceLabel}</div>` : ''}
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);text-align:right;padding-right:14px;align-self:center;white-space:nowrap">${qtyLabel}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:500;text-align:right;align-self:center;min-width:60px">€${lineTotal.toFixed(2)}</div>
+      </div>
+    `;
+  }).join('') + `
+    <div style="display:grid;grid-template-columns:1fr auto;padding:10px 0 2px;font-family:'DM Mono',monospace;font-size:12px;font-weight:500">
+      <span style="color:var(--text2)">SKUPAJ</span>
+      <span style="color:var(--accent)">€${total.toFixed(2)}</span>
+    </div>
+  `;
+
+  document.getElementById('rdEditBtn').onclick = () => { closeModal('modalReceiptDetail'); openEditReceipt(id); };
+  document.getElementById('rdDeleteBtn').onclick = () => { closeModal('modalReceiptDetail'); deleteReceipt(id); };
+  document.getElementById('modalReceiptDetail').classList.add('open');
+}
+
+function renderCompare() {
+  const q = (document.getElementById('compareSearch')?.value||'').toLowerCase();
+  if (!q) {
+    document.getElementById('compareResults').innerHTML = `<div class="table-empty">Vpiši ime artikla za primerjavo cen med trgovinami.</div>`;
+    return;
+  }
+  // Collect all items matching query from all receipts
+  const itemMap = {};
+  receiptsDb.receipts.forEach(r => {
+    r.items.forEach(item => {
+      if (item.name.toLowerCase().includes(q)) {
+        const key = item.name;
+        if (!itemMap[key]) itemMap[key] = [];
+        itemMap[key].push({ store: r.store, price: item.price, unit: item.unit||'kos', qty: item.qty, date: r.date });
+      }
+    });
+  });
+  if (!Object.keys(itemMap).length) {
+    document.getElementById('compareResults').innerHTML = `<div class="table-empty">Artikel "${q}" ni najden v računih.</div>`;
+    return;
+  }
+  const BAR_COLORS = ['#7F77DD','#1D9E75','#C4933A','#B83232','#1E5FA8'];
+  let html = '';
+  Object.entries(itemMap).forEach(([name, entries]) => {
+    const maxPrice = Math.max(...entries.map(e=>e.price));
+    const minPrice = Math.min(...entries.map(e=>e.price));
+    const sorted = [...entries].sort((a,b)=>a.price-b.price);
+    // Determine dominant unit for display
+    const unit = sorted[0].unit || 'kos';
+    html += `
+      <div class="compare-section">
+        <div class="compare-title">${name}</div>
+        <div class="compare-subtitle">${entries.length} zadetkov v ${new Set(entries.map(e=>e.store)).size} trgovinah · cena za ${unit}</div>
+        ${sorted.map((e,i)=>`
+          <div class="compare-item">
+            <div style="min-width:80px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text2)">${e.store}</div>
+            <div class="compare-bar-wrap">
+              <div style="display:flex;align-items:center;gap:8px">
+                <div class="compare-bar" style="width:${Math.max(10,Math.round((e.price/maxPrice)*180))}px;background:${BAR_COLORS[i%BAR_COLORS.length]};opacity:${i===0?1:0.6}"></div>
+                <span class="compare-price ${i===0?'compare-cheapest':''}">€${e.price.toFixed(2)}<span style="font-size:9px;font-weight:400;color:var(--text3)">/${e.unit||'kos'}</span></span>
+                ${i===0?'<span style="font-family:\'DM Mono\',monospace;font-size:9px;background:var(--green-bg);color:var(--green);padding:1px 5px;border-radius:3px">najcenejše</span>':''}
+                ${e.price===maxPrice&&entries.length>1?'<span style="font-family:\'DM Mono\',monospace;font-size:9px;background:var(--red-bg);color:var(--red);padding:1px 5px;border-radius:3px">najdražje</span>':''}
+              </div>
+            </div>
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text3)">${fmtDate(e.date)}</div>
+          </div>
+        `).join('')}
+        <div style="margin-top:10px;font-family:'DM Mono',monospace;font-size:10px;color:var(--green)">
+          Prihranek: €${(maxPrice-minPrice).toFixed(2)} (${Math.round((1-minPrice/maxPrice)*100)}%) z nakupom v ${sorted[0].store}
+        </div>
+      </div>
+    `;
+  });
+  document.getElementById('compareResults').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════
+// RECEIPT MODAL
+// ═══════════════════════════════════════════════
+let rItems = [];
+function openAddReceiptModal() {
+  editingReceiptId = null;
+  rItems = [{name:'',qty:1,unit:'kos',price:0}];
+  document.getElementById('modalReceiptTitle').textContent = 'Dodaj račun iz trgovine';
+  document.getElementById('rStore').value = '';
+  document.getElementById('rDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('rMethod').value = 'Bančna kartica';
+  document.getElementById('rTags').value = '';
+  renderItemRows();
+  document.getElementById('modalReceipt').classList.add('open');
+}
+
+function openEditReceipt(id) {
+  const r = receiptsDb.receipts.find(x=>x.id===id);
+  if (!r) return;
+  editingReceiptId = id;
+  rItems = r.items.map(i=>({...i}));
+  document.getElementById('modalReceiptTitle').textContent = 'Uredi račun';
+  document.getElementById('rStore').value = r.store;
+  document.getElementById('rDate').value = r.date;
+  document.getElementById('rMethod').value = r.method;
+  document.getElementById('rTags').value = (r.tags||[]).join(', ');
+  renderItemRows();
+  document.getElementById('modalReceipt').classList.add('open');
+}
+
+function addItemRow() {
+  rItems.push({name:'',qty:1,unit:'kos',price:0});
+  renderItemRows();
+}
+
+const UNITS = ['kos','kg','dag','g','l','dl','ml','pak','par','m'];
+
+function renderItemRows() {
+  document.getElementById('rItemsList').innerHTML = rItems.map((item,i)=>`
+    <div style="display:grid;grid-template-columns:1fr 58px 70px 72px 28px;gap:5px;margin-bottom:6px;align-items:center">
+      <input type="text" value="${item.name||''}" placeholder="Naziv artikla" oninput="rItems[${i}].name=this.value" style="padding:7px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;font-size:12px;outline:none">
+      <input type="number" value="${item.qty||1}" min="0.001" step="0.001" placeholder="Kol." oninput="rItems[${i}].qty=parseFloat(this.value)||1;updateReceiptTotal()" style="padding:7px 4px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;text-align:right">
+      <select onchange="rItems[${i}].unit=this.value" style="padding:7px 4px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none">
+        ${UNITS.map(u=>`<option value="${u}" ${(item.unit||'kos')===u?'selected':''}>${u}</option>`).join('')}
+      </select>
+      <input type="number" value="${item.price||''}" min="0" step="0.01" placeholder="Cena €" oninput="rItems[${i}].price=parseFloat(this.value)||0;updateReceiptTotal()" style="padding:7px 4px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;text-align:right">
+      <button onclick="rItems.splice(${i},1);renderItemRows()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:0;line-height:1" title="Odstrani">×</button>
+    </div>
+  `).join('') + `<div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);margin-top:2px;padding-left:2px">Kol. · Enota · Cena za enoto</div>`;
+  updateReceiptTotal();
+}
+
+function updateReceiptTotal() {
+  const total = rItems.reduce((s,i)=>s+i.price*i.qty,0);
+  document.getElementById('rTotalDisplay').textContent = '€' + total.toFixed(2);
+}
+
+function saveReceipt() {
+  const store = document.getElementById('rStore').value.trim();
+  if (!store) { showStatus('Vpiši ime trgovine!'); return; }
+  const items = rItems.filter(i=>i.name.trim());
+  if (!items.length) { showStatus('Dodaj vsaj en artikel!'); return; }
+  const tags = document.getElementById('rTags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const r = {
+    id: editingReceiptId || receiptsDb.nextId++,
+    store, date: document.getElementById('rDate').value,
+    method: document.getElementById('rMethod').value,
+    tags, items
+  };
+  if (editingReceiptId) {
+    const idx = receiptsDb.receipts.findIndex(x=>x.id===editingReceiptId);
+    if (idx>=0) receiptsDb.receipts[idx] = r;
+  } else {
+    receiptsDb.receipts.push(r);
+  }
+  saveData(); closeModal('modalReceipt'); renderStore();
+  showStatus('Račun shranjen ✓');
+}
+
+function deleteReceipt(id) {
+  if (!confirm('Izbriši ta račun?')) return;
+  receiptsDb.receipts = receiptsDb.receipts.filter(r=>r.id!==id);
+  saveData(); renderStore();
+  showStatus('Račun izbrisan');
+}
+
+// ═══════════════════════════════════════════════
+// CREDIT CARD
+// ═══════════════════════════════════════════════
+let ccSettings = { limit: 3000, debitDay: 18, manualUsed: 0, note: '' };
+let ccManualEntries = [];
+let editingMdId = null;
+
+async function loadCcData() {
+  try { const r = await FB.get(CC_KEY); if (r && r.value) ccSettings = JSON.parse(r.value); } catch(e) { console.warn('loadCcData:', e.message); }
+  try { const r = await FB.get(CC_MANUAL_KEY); if (r && r.value) ccManualEntries = JSON.parse(r.value); } catch(e) { console.warn('loadCcManual:', e.message); }
+  if (!ccSettings || typeof ccSettings !== 'object') ccSettings = { limit: 3000, debitDay: 18, manualUsed: 0, note: '' };
+  if (!Array.isArray(ccManualEntries)) ccManualEntries = [];
+}
+
+async function saveCcData() {
+  if (!FIREBASE_URL) return;
+  try {
+    await FB.set(CC_KEY, JSON.stringify(ccSettings));
+    await FB.set(CC_MANUAL_KEY, JSON.stringify(ccManualEntries));
+  } catch(e) {}
+}
+
+// Build installment schedule: returns array of {yyyymm, amount} for each future debit
+function buildInstSchedule() {
+  const plans = db.payments.filter(p => p.method === 'Kreditna kartica' && p.installments > 0 && p.amount > 0);
+  const schedule = {}; // key: 'YYYY-MM' => total EUR debited that month
+  const today = new Date();
+
+  plans.forEach(p => {
+    const fee = Math.max(0, p.installments - 1) * 1.60;
+    const totalWithFee = p.amount + fee;
+    const monthly = totalWithFee / p.installments;
+    const purchaseDate = new Date(p.date);
+    // First debit: debitDay of month after purchase (or same month if purchased before debitDay)
+    let firstDebit = new Date(purchaseDate.getFullYear(), purchaseDate.getMonth(), ccSettings.debitDay);
+    if (firstDebit <= purchaseDate) {
+      firstDebit = new Date(purchaseDate.getFullYear(), purchaseDate.getMonth() + 1, ccSettings.debitDay);
+    }
+    for (let i = 0; i < p.installments; i++) {
+      const d = new Date(firstDebit.getFullYear(), firstDebit.getMonth() + i, ccSettings.debitDay);
+      const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+      schedule[key] = (schedule[key] || 0) + monthly;
+    }
+  });
+  return schedule;
+}
+
+// Total amount currently tying up credit limit (sum of all remaining installment amounts)
+function calcTotalOnLimit() {
+  const plans = db.payments.filter(p => p.method === 'Kreditna kartica' && p.installments > 0 && p.amount > 0);
+  const today = new Date();
+  let total = 0;
+  plans.forEach(p => {
+    const fee = Math.max(0, p.installments - 1) * 1.60;
+    const totalWithFee = p.amount + fee;
+    const monthly = totalWithFee / p.installments;
+    const purchaseDate = new Date(p.date);
+    let firstDebit = new Date(purchaseDate.getFullYear(), purchaseDate.getMonth(), ccSettings.debitDay);
+    if (firstDebit <= purchaseDate) firstDebit = new Date(purchaseDate.getFullYear(), purchaseDate.getMonth() + 1, ccSettings.debitDay);
+    let remaining = 0;
+    for (let i = 0; i < p.installments; i++) {
+      const d = new Date(firstDebit.getFullYear(), firstDebit.getMonth() + i, ccSettings.debitDay);
+      if (d >= today) remaining++;
+    }
+    total += remaining * monthly;
+  });
+  // Add manual obremenitev entries, subtract plačilo entries
+  ccManualEntries.forEach(e => {
+    if (e.type === 'obremenitev') total += e.amount;
+    else if (e.type === 'plačilo') total -= e.amount;
+    else if (e.type === 'popravek') total = e.amount; // override
+  });
+  total += ccSettings.manualUsed || 0;
+  return Math.max(0, total);
+}
+
+function renderCreditCard() {
+  const used = calcTotalOnLimit();
+  const limit = ccSettings.limit || 3000;
+  const free = Math.max(0, limit - used);
+  const pct = Math.min(100, Math.round((used / limit) * 100));
+  const barColor = pct > 85 ? 'var(--red)' : pct > 60 ? 'var(--accent)' : 'var(--purple)';
+
+  document.getElementById('ccMetrics').innerHTML = `
+    <div class="metric-card"><div class="metric-label">Skupni limit</div><div class="metric-value">€${limit.toFixed(2)}</div><div class="metric-sub">${ccSettings.note || 'Kreditna kartica'}</div></div>
+    <div class="metric-card"><div class="metric-label">Obremenitev (obroki)</div><div class="metric-value" style="color:${pct>70?'var(--red)':'var(--text)'}">€${used.toFixed(2)}</div><div class="metric-sub">${pct}% limita</div></div>
+    <div class="metric-card"><div class="metric-label">Prosti limit</div><div class="metric-value" style="color:var(--green)">€${free.toFixed(2)}</div><div class="metric-sub">${100-pct}% razpoložljivo</div></div>
+    <div class="metric-card"><div class="metric-label">Dan obremenitve</div><div class="metric-value" style="font-size:22px">${ccSettings.debitDay}.</div><div class="metric-sub">v mesecu</div></div>
+  `;
+  document.getElementById('ccLimitBar').style.width = pct + '%';
+  document.getElementById('ccLimitBar').style.background = barColor;
+  document.getElementById('ccUsedLabel').textContent = `Obremenitev: €${used.toFixed(2)}`;
+  document.getElementById('ccFreeLabel').textContent = `Prosto: €${free.toFixed(2)}`;
+
+  // Monthly schedule
+  const schedule = buildInstSchedule();
+  const today = new Date();
+  const MONTH_NAMES = ['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Avg','Sep','Okt','Nov','Dec'];
+  const keys = Object.keys(schedule).sort().filter(k => {
+    const [y,m] = k.split('-');
+    return new Date(+y, +m-1, 1) >= new Date(today.getFullYear(), today.getMonth(), 1);
+  }).slice(0, 12);
+
+  if (!keys.length) {
+    document.getElementById('ccMonthlySchedule').innerHTML = `<div style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;padding:12px 0">Ni prihodnjih obrokov.</div>`;
+  } else {
+    const maxAmt = Math.max(...keys.map(k => schedule[k]));
+    document.getElementById('ccMonthlySchedule').innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">
+        ${keys.map(k => {
+          const [y,m] = k.split('-');
+          const amt = schedule[k];
+          const barW = Math.round((amt/maxAmt)*100);
+          const isThisMonth = +y===today.getFullYear() && +m-1===today.getMonth();
+          return `
+            <div style="background:${isThisMonth?'var(--purple-bg)':'var(--surface)'};border:1px solid ${isThisMonth?'rgba(107,63,160,0.3)':'var(--border)'};border-radius:var(--r);padding:12px 14px">
+              <div style="font-family:'DM Mono',monospace;font-size:10px;color:${isThisMonth?'var(--purple)':'var(--text3)'};margin-bottom:4px;font-weight:${isThisMonth?'500':'400'}">${MONTH_NAMES[+m-1]} ${y}${isThisMonth?' · ta mesec':''}</div>
+              <div style="font-size:18px;font-weight:600;letter-spacing:-0.5px;color:${isThisMonth?'var(--purple)':'var(--text)'};margin-bottom:8px">€${amt.toFixed(2)}</div>
+              <div style="height:3px;background:var(--surface2);border-radius:2px;overflow:hidden">
+                <div style="height:100%;width:${barW}%;background:${isThisMonth?'var(--purple)':'var(--border2)'};border-radius:2px"></div>
+              </div>
+              <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);margin-top:4px">odtegljaj ${ccSettings.debitDay}.</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  // Active plans table
+  const plans = db.payments.filter(p => p.method === 'Kreditna kartica' && p.installments > 0 && p.amount > 0);
+  document.getElementById('ccPlansEmpty').style.display = plans.length ? 'none' : 'block';
+  if (plans.length) {
+    document.getElementById('ccPlansBody').innerHTML = plans.sort((a,b)=>b.date.localeCompare(a.date)).map(p => {
+      const fee = Math.max(0, p.installments - 1) * 1.60;
+      const totalWithFee = p.amount + fee;
+      const monthly = totalWithFee / p.installments;
+      const purchaseDate = new Date(p.date);
+      let firstDebit = new Date(purchaseDate.getFullYear(), purchaseDate.getMonth(), ccSettings.debitDay);
+      if (firstDebit <= purchaseDate) firstDebit = new Date(purchaseDate.getFullYear(), purchaseDate.getMonth() + 1, ccSettings.debitDay);
+      let paid = 0;
+      const nowD = new Date();
+      for (let i = 0; i < p.installments; i++) {
+        const d = new Date(firstDebit.getFullYear(), firstDebit.getMonth() + i, ccSettings.debitDay);
+        if (d < nowD) paid++;
+      }
+      const remaining = p.installments - paid;
+      const remainingAmt = remaining * monthly;
+      const pct2 = Math.round((paid/p.installments)*100);
+      return `<tr>
+        <td><div style="font-weight:500;font-size:13px">${p.desc}</div><div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace">${p.note||''}</div></td>
+        <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${fmtDate(p.date)}</td>
+        <td class="amount-cell">€${p.amount.toFixed(2)}</td>
+        <td class="text-right text-mono" style="font-size:12px">${p.installments}×</td>
+        <td class="amount-cell" style="color:var(--purple)">€${monthly.toFixed(2)}</td>
+        <td>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:3px">${paid}/${p.installments} plačano</div>
+          <div class="inst-progress"><div class="inst-progress-bar" style="width:${pct2}%"></div></div>
+        </td>
+        <td class="amount-cell" style="color:${remaining>0?'var(--purple)':'var(--green)'}">${remaining>0?'€'+remainingAmt.toFixed(2):'Sproščeno ✓'}</td>
+        <td><button class="btn btn-sm btn-ghost" onclick="openEditModal(${p.id})">uredi</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Manual entries
+  document.getElementById('ccManualEmpty').style.display = ccManualEntries.length ? 'none' : 'block';
+  if (ccManualEntries.length) {
+    document.getElementById('ccManualBody').innerHTML = ccManualEntries.sort((a,b)=>b.date.localeCompare(a.date)).map(e => {
+      const typeColor = e.type==='obremenitev' ? 'var(--red)' : e.type==='plačilo' ? 'var(--green)' : 'var(--text2)';
+      const typeLabel = e.type==='obremenitev' ? '↑ Obremenitev' : e.type==='plačilo' ? '↓ Plačilo' : '↺ Popravek';
+      const sign = e.type==='obremenitev' ? '+' : e.type==='plačilo' ? '−' : '';
+      return `<tr>
+        <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${fmtDate(e.date)}</td>
+        <td><div style="font-size:13px">${e.desc}</div>${e.note?`<div style="font-size:10px;color:var(--text3)">${e.note}</div>`:''}</td>
+        <td class="amount-cell" style="color:${typeColor}">${sign}€${e.amount.toFixed(2)}</td>
+        <td><span style="font-family:'DM Mono',monospace;font-size:10px;color:${typeColor}">${typeLabel}</span></td>
+        <td>
+          <div class="action-btns">
+            <button class="btn btn-sm btn-ghost" onclick="openEditManualDebit(${e.id})">uredi</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteManualDebit(${e.id})">✕</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+function openCcSettingsModal() {
+  document.getElementById('ccLimit').value = ccSettings.limit || 3000;
+  document.getElementById('ccDebitDay').value = ccSettings.debitDay || 18;
+  document.getElementById('ccManualUsed').value = ccSettings.manualUsed || 0;
+  document.getElementById('ccNote').value = ccSettings.note || '';
+  document.getElementById('modalCcSettings').classList.add('open');
+}
+
+function saveCcSettings() {
+  ccSettings.limit = parseFloat(document.getElementById('ccLimit').value) || 3000;
+  ccSettings.debitDay = parseInt(document.getElementById('ccDebitDay').value) || 18;
+  ccSettings.manualUsed = parseFloat(document.getElementById('ccManualUsed').value) || 0;
+  ccSettings.note = document.getElementById('ccNote').value.trim();
+  saveCcData(); closeModal('modalCcSettings'); renderCreditCard();
+  showStatus('Nastavitve kartice shranjene ✓');
+}
+
+let mdNextId = 500;
+function openManualDebitModal() {
+  editingMdId = null;
+  document.getElementById('manualDebitTitle').textContent = 'Ročni vnos / popravek';
+  document.getElementById('mdDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('mdType').value = 'obremenitev';
+  document.getElementById('mdDesc').value = '';
+  document.getElementById('mdAmount').value = '';
+  document.getElementById('mdNote').value = '';
+  document.getElementById('modalManualDebit').classList.add('open');
+}
+
+function openEditManualDebit(id) {
+  const e = ccManualEntries.find(x=>x.id===id);
+  if (!e) return;
+  editingMdId = id;
+  document.getElementById('manualDebitTitle').textContent = 'Uredi vnos';
+  document.getElementById('mdDate').value = e.date;
+  document.getElementById('mdType').value = e.type;
+  document.getElementById('mdDesc').value = e.desc;
+  document.getElementById('mdAmount').value = e.amount;
+  document.getElementById('mdNote').value = e.note || '';
+  document.getElementById('modalManualDebit').classList.add('open');
+}
+
+function saveManualDebit() {
+  const desc = document.getElementById('mdDesc').value.trim();
+  const amt = parseFloat(document.getElementById('mdAmount').value);
+  if (!desc || !amt) { showStatus('Vpiši opis in znesek!'); return; }
+  const entry = {
+    id: editingMdId || mdNextId++,
+    date: document.getElementById('mdDate').value,
+    type: document.getElementById('mdType').value,
+    desc, amount: amt,
+    note: document.getElementById('mdNote').value.trim()
+  };
+  if (editingMdId) {
+    const idx = ccManualEntries.findIndex(x=>x.id===editingMdId);
+    if (idx>=0) ccManualEntries[idx] = entry;
+  } else {
+    ccManualEntries.push(entry);
+  }
+  saveCcData(); closeModal('modalManualDebit'); renderCreditCard();
+  showStatus('Vnos shranjen ✓');
+}
+
+function deleteManualDebit(id) {
+  if (!confirm('Izbriši ta vnos?')) return;
+  ccManualEntries = ccManualEntries.filter(x=>x.id!==id);
+  saveCcData(); renderCreditCard();
+  showStatus('Vnos izbrisan');
+}
+
+// ═══════════════════════════════════════════════
+// DEBIT CARD (BANČNA KARTICA)
+// ═══════════════════════════════════════════════
+let dcSettings = { note: 'Bančni račun', initBalance: 0, initDate: '', refBalance: 500, autoDeduct: 'yes' };
+let dcEntries = [];
+let editingDeId = null;
+let deNextId = 700;
+
+async function loadDcData() {
+  try { const r = await FB.get(DC_KEY); if (r && r.value) dcSettings = JSON.parse(r.value); } catch(e) { console.warn('loadDcData:', e.message); }
+  try { const r = await FB.get(DC_ENTRIES_KEY); if (r && r.value) { const p = JSON.parse(r.value); dcEntries = Array.isArray(p.entries) ? p.entries : []; deNextId = p.nextId || 700; } } catch(e) { console.warn('loadDcEntries:', e.message); }
+  if (!dcSettings || typeof dcSettings !== 'object') dcSettings = { note: 'Bančni račun', initBalance: 0, initDate: '', refBalance: 500, autoDeduct: 'yes' };
+  if (!Array.isArray(dcEntries)) dcEntries = [];
+}
+
+async function saveDcData() {
+  if (!FIREBASE_URL) return;
+  try {
+    await FB.set(DC_KEY, JSON.stringify(dcSettings));
+    await FB.set(DC_ENTRIES_KEY, JSON.stringify({ entries: dcEntries, nextId: deNextId }));
+  } catch(e) {}
+}
+
+// Calculate running balance — sorted entries applied on top of initBalance
+function calcDcBalance() {
+  let balance = parseFloat(dcSettings.initBalance) || 0;
+  // Apply manual entries in date order
+  const sorted = [...dcEntries].sort((a,b) => a.date.localeCompare(b.date));
+  sorted.forEach(e => {
+    if (e.type === 'prihodek') balance += e.amount;
+    else if (e.type === 'odhodek') balance -= e.amount;
+    else if (e.type === 'popravek') balance = e.amount;
+  });
+  // Auto-deduct debit card transactions if enabled
+  if (dcSettings.autoDeduct === 'yes') {
+    const initD = dcSettings.initDate || '2000-01-01';
+    db.payments
+      .filter(p => p.method === 'Bančna kartica' && p.amount > 0 && p.date >= initD)
+      .forEach(p => { balance -= p.amount; });
+  }
+  return balance;
+}
+
+// Build running balance table rows with "balance after" for each entry
+function buildDcRunning() {
+  let balance = parseFloat(dcSettings.initBalance) || 0;
+  const rows = [];
+  // Combine manual entries + auto debit transactions into one timeline
+  const all = [...dcEntries.map(e => ({ ...e, source: 'manual' }))];
+  if (dcSettings.autoDeduct === 'yes') {
+    const initD = dcSettings.initDate || '2000-01-01';
+    db.payments
+      .filter(p => p.method === 'Bančna kartica' && p.amount > 0 && p.date >= initD)
+      .forEach(p => all.push({ id: 'tx-' + p.id, date: p.date, type: 'odhodek', desc: p.desc + ' (transakcija)', amount: p.amount, note: p.note || '', source: 'auto' }));
+  }
+  all.sort((a,b) => a.date.localeCompare(b.date) || 0);
+  // Add initial balance as first synthetic row
+  rows.push({ date: dcSettings.initDate || '—', desc: 'Začetno stanje', type: 'začetek', amount: balance, balanceAfter: balance, source: 'init', id: 'init' });
+  all.forEach(e => {
+    if (e.type === 'prihodek') balance += e.amount;
+    else if (e.type === 'odhodek') balance -= e.amount;
+    else if (e.type === 'popravek') balance = e.amount;
+    rows.push({ ...e, balanceAfter: balance });
+  });
+  return rows.reverse(); // newest first
+}
+
+function renderDebitCard() {
+  const balance = calcDcBalance();
+  const ref = parseFloat(dcSettings.refBalance) || 0;
+  const initBal = parseFloat(dcSettings.initBalance) || 0;
+  const maxBar = Math.max(initBal, balance, ref, 1);
+  const barPct = Math.min(100, Math.max(0, Math.round((balance / maxBar) * 100)));
+  const isLow = ref > 0 && balance < ref;
+  const isNeg = balance < 0;
+  const barColor = isNeg ? 'var(--red)' : isLow ? 'var(--accent)' : 'var(--green)';
+
+  // Metrics
+  const autoDebits = dcSettings.autoDeduct === 'yes'
+    ? db.payments.filter(p => p.method === 'Bančna kartica' && p.amount > 0 && p.date >= (dcSettings.initDate || '2000-01-01')).reduce((s,p) => s+p.amount, 0)
+    : 0;
+  const manualIncome = dcEntries.filter(e => e.type === 'prihodek').reduce((s,e) => s+e.amount, 0);
+  const manualExpense = dcEntries.filter(e => e.type === 'odhodek').reduce((s,e) => s+e.amount, 0);
+
+  document.getElementById('dcMetrics').innerHTML = `
+    <div class="metric-card"><div class="metric-label">Trenutno stanje</div>
+      <div class="metric-value" style="color:${isNeg?'var(--red)':isLow?'var(--accent)':'var(--text)'}">${isNeg?'−':''}€${Math.abs(balance).toFixed(2)}</div>
+      <div class="metric-sub">${isNeg?'⚠ V minusu':isLow?'⚠ Pod referenčnim':'✓ '+dcSettings.note}</div></div>
+    <div class="metric-card"><div class="metric-label">Skupaj prihodki</div>
+      <div class="metric-value" style="color:var(--green)">+€${manualIncome.toFixed(2)}</div>
+      <div class="metric-sub">${dcEntries.filter(e=>e.type==='prihodek').length} vnosov</div></div>
+    <div class="metric-card"><div class="metric-label">Skupaj odhodki</div>
+      <div class="metric-value" style="color:var(--red)">−€${(manualExpense+autoDebits).toFixed(2)}</div>
+      <div class="metric-sub">${dcSettings.autoDeduct==='yes'?'vključno z bančno kartico':'samo ročni vnosi'}</div></div>
+    <div class="metric-card"><div class="metric-label">Referenčno stanje</div>
+      <div class="metric-value" style="color:var(--text2)">€${ref.toFixed(2)}</div>
+      <div class="metric-sub">${isLow?'⚠ Pod minimumom':'✓ Nad minimumom'}</div></div>
+  `;
+
+  document.getElementById('dcBalanceBar').style.width = barPct + '%';
+  document.getElementById('dcBalanceBar').style.background = barColor;
+  document.getElementById('dcBalanceLabel').textContent = `Stanje: €${balance.toFixed(2)}`;
+  document.getElementById('dcRefLabel').textContent = ref > 0 ? `Min. stanje: €${ref.toFixed(2)}` : 'Referenca ni nastavljena';
+  document.getElementById('dcBarSubtitle').textContent = dcSettings.note + (dcSettings.initDate ? ' · od ' + fmtDate(dcSettings.initDate) : '');
+
+  // Income list
+  const incomeItems = dcEntries.filter(e=>e.type==='prihodek').sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+  document.getElementById('dcIncomeList').innerHTML = incomeItems.length
+    ? incomeItems.map(e=>`
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--border)">
+          <div><div style="font-size:12px">${e.desc}</div><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)">${fmtDate(e.date)}</div></div>
+          <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--green)">+€${e.amount.toFixed(2)}</div>
+        </div>`).join('')
+    : '<div style="font-size:12px;color:var(--text3)">Ni prihodkov.</div>';
+
+  // Expense list (auto)
+  const expItems = dcSettings.autoDeduct==='yes'
+    ? db.payments.filter(p=>p.method==='Bančna kartica'&&p.amount>0&&p.date>=(dcSettings.initDate||'2000-01-01')).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5)
+    : [];
+  document.getElementById('dcExpenseList').innerHTML = expItems.length
+    ? expItems.map(p=>`
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--border)">
+          <div><div style="font-size:12px">${p.desc}</div><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)">${fmtDate(p.date)}</div></div>
+          <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--red)">−€${p.amount.toFixed(2)}</div>
+        </div>`).join('')
+    : `<div style="font-size:12px;color:var(--text3)">${dcSettings.autoDeduct==='yes'?'Ni bančnih transakcij od začetnega datuma.':'Samodejni odhodki so izklopljeni.'}</div>`;
+
+  // Full running table
+  const rows = buildDcRunning();
+  document.getElementById('dcEntriesEmpty').style.display = rows.length <= 1 ? 'block' : 'none';
+  document.getElementById('dcEntriesBody').innerHTML = rows.map(row => {
+    const isInit = row.source === 'init';
+    const isAuto = row.source === 'auto';
+    const typeColor = row.type==='prihodek' ? 'var(--green)' : row.type==='odhodek' ? 'var(--red)' : row.type==='začetek' ? 'var(--blue)' : 'var(--text2)';
+    const typeLabel = row.type==='prihodek' ? '↑ Prihodek' : row.type==='odhodek' ? '↓ Odhodek' : row.type==='popravek' ? '↺ Popravek' : '◆ Začetno';
+    const sign = row.type==='prihodek' ? '+' : row.type==='odhodek' ? '−' : '';
+    const balColor = row.balanceAfter < 0 ? 'var(--red)' : row.balanceAfter < ref ? 'var(--accent)' : 'var(--green)';
+    const editBtn = (!isInit && !isAuto) ? `<button class="btn btn-sm btn-ghost" onclick="openEditDcEntry(${row.id})">uredi</button><button class="btn btn-sm btn-danger" onclick="deleteDcEntry(${row.id})">✕</button>` : '';
+    return `<tr style="${isInit?'background:var(--blue-bg)':''}">
+      <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);white-space:nowrap">${row.date !== '—' ? fmtDate(row.date) : '—'}</td>
+      <td>
+        <div style="font-size:13px${isInit?';font-weight:600':''}">${row.desc}</div>
+        ${row.note?`<div style="font-size:10px;color:var(--text3)">${row.note}</div>`:''}
+        ${isAuto?`<span style="font-family:'DM Mono',monospace;font-size:9px;background:var(--surface2);color:var(--text3);padding:1px 5px;border-radius:3px">auto</span>`:''}
+      </td>
+      <td class="amount-cell" style="color:${typeColor}">${isInit?'':''+sign}€${row.amount.toFixed(2)}</td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:10px;color:${typeColor}">${typeLabel}</span></td>
+      <td class="amount-cell" style="color:${balColor};font-weight:600">€${row.balanceAfter.toFixed(2)}</td>
+      <td><div class="action-btns">${editBtn}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+function openDcSettingsModal() {
+  document.getElementById('dcNote').value = dcSettings.note || '';
+  document.getElementById('dcInitBalance').value = dcSettings.initBalance || '';
+  document.getElementById('dcInitDate').value = dcSettings.initDate || new Date().toISOString().split('T')[0];
+  document.getElementById('dcRefBalance').value = dcSettings.refBalance || '';
+  document.getElementById('dcAutoDeduct').value = dcSettings.autoDeduct || 'yes';
+  document.getElementById('modalDcSettings').classList.add('open');
+}
+
+function saveDcSettings() {
+  const bal = parseFloat(document.getElementById('dcInitBalance').value);
+  if (isNaN(bal)) { showStatus('Vnesi začetno stanje!'); return; }
+  dcSettings.note = document.getElementById('dcNote').value.trim() || 'Bančni račun';
+  dcSettings.initBalance = bal;
+  dcSettings.initDate = document.getElementById('dcInitDate').value;
+  dcSettings.refBalance = parseFloat(document.getElementById('dcRefBalance').value) || 0;
+  dcSettings.autoDeduct = document.getElementById('dcAutoDeduct').value;
+  saveDcData(); closeModal('modalDcSettings'); renderDebitCard();
+  showStatus('Nastavitve shranjene ✓');
+}
+
+function openDcEntryModal(type) {
+  editingDeId = null;
+  document.getElementById('dcEntryTitle').textContent = type==='prihodek' ? 'Dodaj prihodek' : type==='odhodek' ? 'Dodaj odhodek' : 'Popravek stanja';
+  document.getElementById('deDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('deType').value = type;
+  document.getElementById('deDesc').value = '';
+  document.getElementById('deAmount').value = '';
+  document.getElementById('deNote').value = '';
+  updateDeTypeHint();
+  document.getElementById('modalDcEntry').classList.add('open');
+  setTimeout(() => document.getElementById('deDesc').focus(), 50);
+}
+
+function openEditDcEntry(id) {
+  const e = dcEntries.find(x => x.id === id);
+  if (!e) return;
+  editingDeId = id;
+  document.getElementById('dcEntryTitle').textContent = 'Uredi vnos';
+  document.getElementById('deDate').value = e.date;
+  document.getElementById('deType').value = e.type;
+  document.getElementById('deDesc').value = e.desc;
+  document.getElementById('deAmount').value = e.amount;
+  document.getElementById('deNote').value = e.note || '';
+  updateDeTypeHint();
+  document.getElementById('modalDcEntry').classList.add('open');
+}
+
+function updateDeTypeHint() {
+  const t = document.getElementById('deType').value;
+  const hint = document.getElementById('deTypeHint');
+  if (t === 'prihodek') { hint.style.color = 'var(--green)'; hint.textContent = 'Poveča stanje na računu (plača, prenos, vračilo...)'; }
+  else if (t === 'odhodek') { hint.style.color = 'var(--red)'; hint.textContent = 'Zmanjša stanje na računu (gotovina, nakazilo...)'; }
+  else { hint.style.color = 'var(--blue)'; hint.textContent = 'Nastavi točno stanje — prepiše izračun za ta trenutek'; }
+}
+
+function saveDcEntry() {
+  const desc = document.getElementById('deDesc').value.trim();
+  const amt = parseFloat(document.getElementById('deAmount').value);
+  if (!desc || isNaN(amt) || amt < 0) { showStatus('Vpiši opis in veljaven znesek!'); return; }
+  const entry = {
+    id: editingDeId || deNextId++,
+    date: document.getElementById('deDate').value,
+    type: document.getElementById('deType').value,
+    desc, amount: amt,
+    note: document.getElementById('deNote').value.trim()
+  };
+  if (editingDeId) {
+    const idx = dcEntries.findIndex(x => x.id === editingDeId);
+    if (idx >= 0) dcEntries[idx] = entry;
+  } else {
+    dcEntries.push(entry);
+  }
+  saveDcData(); closeModal('modalDcEntry'); renderDebitCard();
+  showStatus('Vnos shranjen ✓');
+}
+
+function deleteDcEntry(id) {
+  if (!confirm('Izbriši ta vnos?')) return;
+  dcEntries = dcEntries.filter(x => x.id !== id);
+  saveDcData(); renderDebitCard();
+  showStatus('Vnos izbrisan');
+}
+
+// ═══════════════════════════════════════════════
+// SCAN / IMPORT — AI receipt analysis
+// ═══════════════════════════════════════════════
+let scanFileData = null;   // { base64, mediaType, name, size, isPdf }
+let scanResult = null;     // parsed AI result
+let srItems = [];          // editable items list
+
+function handleScanDrop(e) {
+  e.preventDefault();
+  document.getElementById('scanDropZone').style.borderColor = '';
+  const file = e.dataTransfer.files[0];
+  if (file) handleScanFile(file);
+}
+
+function handleScanFile(file) {
+  if (!file) return;
+  const maxMB = 10;
+  if (file.size > maxMB * 1024 * 1024) { showStatus(`Datoteka je prevelika (max ${maxMB} MB)`); return; }
+  const allowed = ['image/png','image/jpeg','image/jpg','image/webp','application/pdf'];
+  if (!allowed.includes(file.type)) { showStatus('Nepodprta oblika — uporabi PNG, JPG, WEBP ali PDF'); return; }
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const dataUrl = ev.target.result;
+    const base64 = dataUrl.split(',')[1];
+    const isPdf = file.type === 'application/pdf';
+    scanFileData = { base64, mediaType: file.type, name: file.name, size: file.size, isPdf };
+
+    // UI
+    document.getElementById('scanPreviewWrap').style.display = 'block';
+    document.getElementById('scanFileIcon').textContent = isPdf ? '📄' : '🖼';
+    document.getElementById('scanFileName').textContent = file.name;
+    document.getElementById('scanFileSize').textContent = (file.size / 1024).toFixed(0) + ' KB · ' + (isPdf ? 'PDF' : 'Slika');
+    const img = document.getElementById('scanImgPreview');
+    if (!isPdf) { img.src = dataUrl; img.style.display = 'block'; }
+    else img.style.display = 'none';
+    document.getElementById('scanAnalyseBtn').style.display = 'flex';
+    document.getElementById('scanResults').style.display = 'none';
+    document.getElementById('scanProgress').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearScanFile() {
+  scanFileData = null; scanResult = null;
+  document.getElementById('scanPreviewWrap').style.display = 'none';
+  document.getElementById('scanAnalyseBtn').style.display = 'none';
+  document.getElementById('scanResults').style.display = 'none';
+  document.getElementById('scanProgress').style.display = 'none';
+  document.getElementById('scanFileInput').value = '';
+  document.getElementById('scanImgPreview').src = '';
+}
+
+async function analyseReceipt() {
+  if (!scanFileData) return;
+  document.getElementById('scanAnalyseBtn').style.display = 'none';
+  document.getElementById('scanResults').style.display = 'none';
+  document.getElementById('scanProgress').style.display = 'block';
+  document.getElementById('scanProgressText').textContent = 'Pošiljam v analizo...';
+
+  const prompt = `Si finančni asistent za slovensko aplikacijo za sledenje plačil. Analiziraj ta račun in vrni SAMO JSON brez kakršnega koli drugega besedila.
+
+JSON mora vsebovati točno ta polja:
+{
+  "type": "store" | "expense",
+  "store": "ime trgovine ali null",
+  "desc": "kratek opis (ime trgovca/storitve)",
+  "date": "YYYY-MM-DD",
+  "amount": skupni znesek kot število,
+  "method": "Bančna kartica" | "Kreditna kartica" | "Gotovina" | "PayPal" | "Mastercard" | "Visa" | "drugo",
+  "category": "Nakupovanje" | "Hrana/restavracija" | "Streaming" | "Elektrika" | "Mobitel" | "Parkiranje" | "Vstopnice/dogodki" | "Naročnina" | "Šola" | "Zdravje" | "Gorivo" | "Drugo",
+  "tags": ["tag1", "tag2"],
+  "note": "kratka opomba ali null",
+  "isStore": true|false,
+  "items": [
+    { "name": "naziv artikla", "qty": količina kot število, "unit": "kos"|"kg"|"dag"|"g"|"l"|"dl"|"ml"|"pak"|"par"|"m", "price": cena_za_enoto kot število }
+  ],
+  "aiNote": "kratka opomba za uporabnika, kaj je AI razpoznal ali česa ni bil prepričan"
+}
+
+Pravila:
+- type je "store" če gre za nakup v trgovini (živila, drogerija, hardware, obleke), drugače "expense"
+- items lista je prazna [] kadar type je "expense"  
+- qty je dejanska količina (0.651 za tehtano blago)
+- price je cena ZA ENOTO (ne skupna), npr. pri 2 kg paradižnika po 1.89/kg je price=1.89
+- unit: kg/dag/g za tehtano, l/dl/ml za tekočino, kos za pakete/kose
+- date: če je ni, uporabi danes (${new Date().toISOString().split('T')[0]})
+- Vse vrednosti v EUR`;
+
+  try {
+    document.getElementById('scanProgressText').textContent = 'AI analizira račun...';
+
+    // Build message content — image or PDF
+    const contentParts = [];
+    if (scanFileData.isPdf) {
+      contentParts.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: scanFileData.base64 } });
+    } else {
+      contentParts.push({ type: 'image', source: { type: 'base64', media_type: scanFileData.mediaType, data: scanFileData.base64 } });
+    }
+    contentParts.push({ type: 'text', text: prompt });
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: contentParts }]
+      })
+    });
+
+    document.getElementById('scanProgressText').textContent = 'Razčlenjujem rezultat...';
+    const data = await response.json();
+    if (!response.ok) {
+      const errMsg = data.error?.message || JSON.stringify(data);
+      throw new Error(`API ${response.status}: ${errMsg}`);
+    }
+
+    const raw = data.content.find(b => b.type === 'text')?.text || '';
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('AI ni vrnil veljavnega JSON-a');
+    scanResult = JSON.parse(jsonMatch[0]);
+
+    document.getElementById('scanProgress').style.display = 'none';
+    populateScanForm(scanResult);
+    document.getElementById('scanResults').style.display = 'block';
+
+  } catch(e) {
+    document.getElementById('scanProgress').style.display = 'none';
+    document.getElementById('scanAnalyseBtn').style.display = 'flex';
+    showStatus('Napaka pri analizi: ' + e.message, 4000);
+    console.error('Scan error:', e);
+  }
+}
+
+function populateScanForm(r) {
+  const isStore = r.type === 'store' || r.isStore;
+
+  // Type badge
+  document.getElementById('scanTypeLabel').textContent = isStore ? 'Nakup v trgovini' : 'Strošek / storitev';
+  const badge = document.getElementById('scanTypeBadge');
+  badge.textContent = isStore ? 'TRGOVINA' : 'STROŠEK';
+  badge.style.background = isStore ? 'var(--green-bg)' : 'var(--accent-bg)';
+  badge.style.color = isStore ? 'var(--green)' : 'var(--accent-dark)';
+
+  // Fill fields
+  document.getElementById('srDesc').value = r.desc || r.store || '';
+  document.getElementById('srDate').value = r.date || new Date().toISOString().split('T')[0];
+  document.getElementById('srAmount').value = r.amount || '';
+  const methodEl = document.getElementById('srMethod');
+  [...methodEl.options].forEach(o => { if (o.value === r.method) methodEl.value = r.method; });
+  const catEl = document.getElementById('srCat');
+  [...catEl.options].forEach(o => { if (o.value === r.category) catEl.value = r.category; });
+  document.getElementById('srTags').value = (r.tags || []).concat(['uvožen']).join(', ');
+  document.getElementById('srAiNote').textContent = r.aiNote || '';
+
+  // Store section
+  document.getElementById('srStoreSection').style.display = isStore ? 'block' : 'none';
+  if (isStore) {
+    document.getElementById('srStore').value = r.store || r.desc || '';
+    srItems = (r.items || []).map(i => ({ ...i }));
+    if (!srItems.length && r.desc) srItems = [{ name: r.desc, qty: 1, unit: 'kos', price: r.amount || 0 }];
+    renderSrItems();
+  }
+
+  // Save buttons
+  document.getElementById('srSaveExpenseOnly').style.display = isStore ? 'flex' : 'none';
+  document.getElementById('srSaveStoreOnly').style.display = isStore ? 'flex' : 'none';
+}
+
+const SR_UNITS = ['kos','kg','dag','g','l','dl','ml','pak','par','m'];
+
+function srAddItem() {
+  srItems.push({ name: '', qty: 1, unit: 'kos', price: 0 });
+  renderSrItems();
+}
+
+function renderSrItems() {
+  document.getElementById('srItemsList').innerHTML = srItems.map((item, i) => `
+    <div style="display:grid;grid-template-columns:1fr 55px 65px 70px 22px;gap:4px;margin-bottom:5px;align-items:center">
+      <input type="text" value="${item.name||''}" placeholder="Naziv" oninput="srItems[${i}].name=this.value" style="padding:5px 8px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);font-family:'Syne',sans-serif;font-size:11px;outline:none">
+      <input type="number" value="${item.qty||1}" min="0.001" step="0.001" oninput="srItems[${i}].qty=parseFloat(this.value)||1" style="padding:5px 4px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;outline:none;text-align:right">
+      <select onchange="srItems[${i}].unit=this.value" style="padding:5px 3px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;outline:none">
+        ${SR_UNITS.map(u => `<option value="${u}" ${(item.unit||'kos')===u?'selected':''}>${u}</option>`).join('')}
+      </select>
+      <input type="number" value="${item.price||''}" min="0" step="0.01" placeholder="€/enoto" oninput="srItems[${i}].price=parseFloat(this.value)||0" style="padding:5px 4px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;outline:none;text-align:right">
+      <button onclick="srItems.splice(${i},1);renderSrItems()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:0;line-height:1">×</button>
+    </div>
+  `).join('') || '<div style="font-size:11px;color:var(--text3);padding:4px 0">Ni artiklov</div>';
+}
+
+function saveScanResult(saveExpense, saveStore) {
+  const desc = document.getElementById('srDesc').value.trim();
+  const amount = parseFloat(document.getElementById('srAmount').value) || 0;
+  const date = document.getElementById('srDate').value;
+  if (!desc || !date) { showStatus('Vnesi vsaj opis in datum!'); return; }
+
+  const tags = document.getElementById('srTags').value.split(',').map(t => t.trim()).filter(Boolean);
+  const method = document.getElementById('srMethod').value;
+  const cat = document.getElementById('srCat').value;
+
+  if (saveExpense) {
+    const tx = {
+      id: db.nextId++,
+      date, desc, cat, method, amount,
+      note: scanFileData?.name || '',
+      tags: [...tags]
+    };
+    db.payments.push(tx);
+    saveData();
+    showStatus('Dodano med transakcije ✓');
+  }
+
+  if (saveStore) {
+    const store = document.getElementById('srStore').value.trim();
+    if (!store) { showStatus('Vnesi ime trgovine!'); return; }
+    const items = srItems.filter(i => i.name.trim());
+    if (!items.length) { showStatus('Dodaj vsaj en artikel!'); return; }
+    receiptsDb.receipts.push({
+      id: receiptsDb.nextId++,
+      store, date, method,
+      tags: [...tags],
+      items
+    });
+    saveData();
+    showStatus(saveExpense ? 'Shranjeno povsod ✓' : 'Dodano v Trgovino ✓');
+  }
+
+  renderAll();
+  clearScanFile();
+  renderScanHistory();
+  setTimeout(() => navigate('transactions'), 800);
+}
+
+const SCAN_HISTORY_KEY = 'scan_history';
+let scanHistory = [];
+
+async function loadScanHistory() {
+  try {
+    const r = await FB.get(SCAN_HISTORY_KEY);
+    if (r && r.value) scanHistory = JSON.parse(r.value);
+    if (!Array.isArray(scanHistory)) scanHistory = [];
+  } catch(e) { scanHistory = []; }
+}
+
+function renderScanHistory() {
+  const el = document.getElementById('scanHistory');
+  if (!el) return;
+  if (!scanHistory.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">Zadnji uvozi</div>
+    ${scanHistory.slice(-10).reverse().map(h => `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:13px;font-weight:500">${h.desc}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)">${h.date} · ${h.file}</div>
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--accent)">€${(h.amount||0).toFixed(2)}</div>
+      </div>
+    `).join('')}
+  `;
+}
+
+// ═══════════════════════════════════════════════
+// INIT — zagotovi, da se aplikacija vedno zažene
+// ═══════════════════════════════════════════════
+async function init() {
+  // Hard safety: hide loader after 6s no matter what
+  const safetyTimer = setTimeout(finishInit, 6000);
+
+  try {
+    // Load all data in parallel — each function handles its own errors internally
+    await Promise.all([loadData(), loadCcData(), loadDcData(), loadScanHistory()]);
+  } catch(e) {
+    console.error('Unexpected init error:', e);
+    // Ensure we have at least seed data
+    if (!db.payments || !db.payments.length) seedData();
+  }
+
+  clearTimeout(safetyTimer);
+  finishInit();
+}
+
+function finishInit() {
+  // Guard against double-call
+  if (finishInit._done) return;
+  finishInit._done = true;
+
+  try { renderAll(); } catch(e) { console.error('renderAll error:', e); }
+  try { updateFbStatus(); } catch(e) {}
+
+  const lastSync = document.getElementById('lastSync');
+  if (lastSync) lastSync.textContent = new Date().toLocaleTimeString('sl-SI', {hour:'2-digit',minute:'2-digit'});
+
+  if (!FIREBASE_URL) {
+    setTimeout(() => showStatus('⚙ Klikni "Baza" za nastavitev skupne baze med napravami', 5000), 800);
+  }
+
+  // Hide loader
+  const lo = document.getElementById('loadingOverlay');
+  if (lo) {
+    lo.classList.add('hidden');
+    setTimeout(() => { if (lo) lo.style.display = 'none'; }, 400);
+  }
+}
+
+init();
+
+function openFirebaseSetup() {
+  document.getElementById('fbUrl').value = FIREBASE_URL || '';
+  document.getElementById('modalFirebase').classList.add('open');
+  updateFbStatus();
+}
+
+function updateFbStatus() {
+  const indicator = document.getElementById('syncIndicator');
+  if (!indicator) return;
+  if (FIREBASE_URL) {
+    indicator.style.color = 'var(--green)';
+    indicator.textContent = '⬤ Firebase';
+  } else {
+    indicator.style.color = 'var(--red)';
+    indicator.textContent = '⬤ Lokalno';
+  }
+  // Only update modal elements if the modal is open
+  const el = document.getElementById('fbStatus');
+  if (!el) return;
+  if (FIREBASE_URL) {
+    el.style.background = 'var(--green-bg)';
+    el.style.color = 'var(--green)';
+    el.textContent = '✓ Povezano: ' + FIREBASE_URL;
+  } else {
+    el.style.background = 'var(--red-bg)';
+    el.style.color = 'var(--red)';
+    el.textContent = '✗ Firebase ni nastavljen — podatki se ne shranjujejo med napravami';
+  }
+}
+
+async function testFirebase() {
+  const url = document.getElementById('fbUrl').value.trim().replace(/\/$/, '');
+  if (!url) { showStatus('Vpiši URL!'); return; }
+  const el = document.getElementById('fbStatus');
+  el.style.background = 'var(--accent-bg)'; el.style.color = 'var(--accent-dark)';
+  el.textContent = '⏳ Testiram povezavo...';
+  try {
+    const res = await fetch(`${url}/ping_test.json`, { method: 'PUT', body: JSON.stringify('ok') });
+    if (res.ok) {
+      el.style.background = 'var(--green-bg)'; el.style.color = 'var(--green)';
+      el.textContent = '✓ Povezava uspešna! Klikni Shrani in poveži.';
+    } else {
+      throw new Error('HTTP ' + res.status);
+    }
+  } catch(e) {
+    el.style.background = 'var(--red-bg)'; el.style.color = 'var(--red)';
+    el.textContent = '✗ Napaka: ' + e.message + ' — preveri URL in pravila baze';
+  }
+}
+
+async function saveFirebaseUrl() {
+  const url = document.getElementById('fbUrl').value.trim().replace(/\/$/, '');
+  if (!url) { showStatus('Vpiši URL!'); return; }
+  FIREBASE_URL = url;
+  localStorage.setItem('placila_firebase_url', url);
+  closeModal('modalFirebase');
+  updateFbStatus();
+  showStatus('Nalagam podatke iz Firebase...');
+  await loadData(); await loadCcData(); await loadDcData();
+  renderAll();
+  showStatus('Povezano z Firebase ✓');
+}
+</script>
+</body>
+</html>
