@@ -1474,6 +1474,7 @@ tr:hover .action-btns { opacity: 1; }
     <div class="form-row">
       <label>Dan v mesecu, ko kartica bremeni obroke</label>
       <input type="number" id="ccDebitDay" min="1" max="28" placeholder="18" value="18">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-top:5px" id="ccDebitDayHint"></div>
     </div>
     <div class="form-row">
       <label>Trenutna obremenitev (ročni vnos, če obstaja)</label>
@@ -2344,16 +2345,23 @@ function renderInstallments() {
     const fee = Math.max(0, p.installments - 1) * 1.60;
     const total = p.amount + fee;
     const monthly = total / p.installments;
-    const start = new Date(p.date);
-    let paid = 0, d = new Date(start);
-    while (d <= today && paid < p.installments) { paid++; d.setMonth(d.getMonth()+1); }
+    const firstDebit = calcFirstDebit(new Date(p.date));
+    let paid = 0;
+    for (let i = 0; i < p.installments; i++) {
+      const d = new Date(firstDebit.getFullYear(), firstDebit.getMonth() + i, ccSettings.debitDay);
+      if (d <= today) paid++;
+    }
     const pct = Math.round((paid/p.installments)*100);
     const remaining = p.installments - paid;
     const remAmt = remaining * monthly;
+    const firstDebitStr = fmtDate(firstDebit.toISOString().split('T')[0]);
     return `
       <tr>
         <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${fmtDate(p.date)}</td>
-        <td><div style="font-weight:500">${p.desc}</div><div style="font-size:11px;color:var(--text3)">${p.note||''}</div></td>
+        <td><div style="font-weight:500">${p.desc}</div>
+          <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace">${p.note||''}</div>
+          <div style="font-size:10px;color:var(--purple);font-family:'DM Mono',monospace">1. odtegljaj: ${firstDebitStr}</div>
+        </td>
         <td class="amount-cell">€${p.amount.toFixed(2)}</td>
         <td class="text-right text-mono" style="font-size:12px">${p.installments}x</td>
         <td class="amount-cell">€${monthly.toFixed(2)}</td>
@@ -2622,6 +2630,23 @@ let ccSettings = { limit: 3000, debitDay: 18, manualUsed: 0, note: '' };
 let ccManualEntries = [];
 let editingMdId = null;
 
+// Izračun prvega odtegljaja:
+// - nakup do vključno (debitDay - 2) → odtegljaj ISTI mesec (18. tega meseca)
+// - nakup od (debitDay - 1) naprej   → odtegljaj NASLEDNJI mesec
+// Primer: debitDay=18 → meja je 16. → nakup 1.–16. = odtegljaj 18. tega meseca
+//                                       nakup 17.–31. = odtegljaj 18. naslednjega meseca
+function calcFirstDebit(purchaseDate) {
+  const cutoff = ccSettings.debitDay - 2; // 16. pri debitDay=18
+  const sameMonthDebit = new Date(purchaseDate.getFullYear(), purchaseDate.getMonth(), ccSettings.debitDay);
+  if (purchaseDate.getDate() <= cutoff) {
+    // nakup je dovolj zgodaj — odtegljaj isti mesec
+    return sameMonthDebit;
+  } else {
+    // nakup prepozen — odtegljaj naslednji mesec
+    return new Date(purchaseDate.getFullYear(), purchaseDate.getMonth() + 1, ccSettings.debitDay);
+  }
+}
+
 async function loadCcData() {
   try { const r = await FB.get(CC_KEY); if (r && r.value) ccSettings = JSON.parse(r.value); } catch(e) { console.warn('loadCcData:', e.message); }
   try { const r = await FB.get(CC_MANUAL_KEY); if (r && r.value) ccManualEntries = JSON.parse(r.value); } catch(e) { console.warn('loadCcManual:', e.message); }
@@ -2648,11 +2673,7 @@ function buildInstSchedule() {
     const totalWithFee = p.amount + fee;
     const monthly = totalWithFee / p.installments;
     const purchaseDate = new Date(p.date);
-    // First debit: debitDay of month after purchase (or same month if purchased before debitDay)
-    let firstDebit = new Date(purchaseDate.getFullYear(), purchaseDate.getMonth(), ccSettings.debitDay);
-    if (firstDebit <= purchaseDate) {
-      firstDebit = new Date(purchaseDate.getFullYear(), purchaseDate.getMonth() + 1, ccSettings.debitDay);
-    }
+    const firstDebit = calcFirstDebit(purchaseDate);
     for (let i = 0; i < p.installments; i++) {
       const d = new Date(firstDebit.getFullYear(), firstDebit.getMonth() + i, ccSettings.debitDay);
       const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
@@ -2672,8 +2693,7 @@ function calcTotalOnLimit() {
     const totalWithFee = p.amount + fee;
     const monthly = totalWithFee / p.installments;
     const purchaseDate = new Date(p.date);
-    let firstDebit = new Date(purchaseDate.getFullYear(), purchaseDate.getMonth(), ccSettings.debitDay);
-    if (firstDebit <= purchaseDate) firstDebit = new Date(purchaseDate.getFullYear(), purchaseDate.getMonth() + 1, ccSettings.debitDay);
+    const firstDebit = calcFirstDebit(purchaseDate);
     let remaining = 0;
     for (let i = 0; i < p.installments; i++) {
       const d = new Date(firstDebit.getFullYear(), firstDebit.getMonth() + i, ccSettings.debitDay);
@@ -2753,8 +2773,7 @@ function renderCreditCard() {
       const totalWithFee = p.amount + fee;
       const monthly = totalWithFee / p.installments;
       const purchaseDate = new Date(p.date);
-      let firstDebit = new Date(purchaseDate.getFullYear(), purchaseDate.getMonth(), ccSettings.debitDay);
-      if (firstDebit <= purchaseDate) firstDebit = new Date(purchaseDate.getFullYear(), purchaseDate.getMonth() + 1, ccSettings.debitDay);
+      const firstDebit = calcFirstDebit(purchaseDate);
       let paid = 0;
       const nowD = new Date();
       for (let i = 0; i < p.installments; i++) {
@@ -2808,6 +2827,10 @@ function openCcSettingsModal() {
   document.getElementById('ccDebitDay').value = ccSettings.debitDay || 18;
   document.getElementById('ccManualUsed').value = ccSettings.manualUsed || 0;
   document.getElementById('ccNote').value = ccSettings.note || '';
+  const day = ccSettings.debitDay || 18;
+  const cutoff = day - 2;
+  document.getElementById('ccDebitDayHint').textContent =
+    `Nakup do ${cutoff}. → odtegljaj ${day}. tega meseca · Nakup od ${cutoff+1}. naprej → odtegljaj ${day}. naslednjega meseca`;
   document.getElementById('modalCcSettings').classList.add('open');
 }
 
