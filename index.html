@@ -1143,6 +1143,8 @@ tr:hover .action-btns { opacity: 1; }
             <option value="Kreditna kartica">Kreditna kartica</option>
             <option value="PayPal">PayPal</option>
             <option value="Gotovina">Gotovina</option>
+            <option value="Mastercard">Mastercard</option>
+            <option value="Visa">Visa</option>
           </select>
           <select id="txCat" onchange="renderTx()">
             <option value="">Vse kategorije</option>
@@ -1690,7 +1692,10 @@ tr:hover .action-btns { opacity: 1; }
         <select id="rMethod">
           <option>Bančna kartica</option>
           <option>Kreditna kartica</option>
+          <option>PayPal</option>
           <option>Gotovina</option>
+          <option>Mastercard</option>
+          <option>Visa</option>
         </select>
       </div>
       <div class="form-row">
@@ -2643,10 +2648,10 @@ async function loadData() {
   // Always ensure valid structure regardless of what happened above
   if (!db || typeof db !== 'object' || !Array.isArray(db.payments)) db = { payments: [], nextId: 100 };
   if (!db.nextId) db.nextId = 100;
-  // Normaliziramo datume takoj po nalaganju — prepreči napačno sortiranje
-  normalizeDates();
   if (!receiptsDb || typeof receiptsDb !== 'object' || !Array.isArray(receiptsDb.receipts)) receiptsDb = { receipts: [], nextId: 200 };
   if (!receiptsDb.nextId) receiptsDb.nextId = 200;
+  // Normaliziramo datume takoj po nalaganju — prepreči napačno sortiranje
+  normalizeDates();
   if (db.payments.length === 0) seedData();
 
   // ── SMART MERGE: Dodaj transakcije iz izpiskov ki še niso v bazi ──
@@ -4939,27 +4944,66 @@ function saveReceipt() {
   const items = rItems.filter(i=>i.name.trim());
   if (!items.length) { showStatus('Dodaj vsaj en artikel!'); return; }
   const tags = document.getElementById('rTags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const date = normalizeDate(document.getElementById('rDate').value);
+  const method = document.getElementById('rMethod').value;
+  const total = Math.round(items.reduce((s,i)=>s+(i.price*i.qty),0)*100)/100;
+
   const r = {
     id: editingReceiptId || receiptsDb.nextId++,
-    store, date: normalizeDate(document.getElementById('rDate').value),
-    method: document.getElementById('rMethod').value,
-    tags, items
+    store, date, method, tags, items
   };
+
   if (editingReceiptId) {
     const idx = receiptsDb.receipts.findIndex(x=>x.id===editingReceiptId);
     if (idx>=0) receiptsDb.receipts[idx] = r;
+    // Posodobi obstoječ zapis v db.payments (po receipt id)
+    const txIdx = db.payments.findIndex(p => p.receiptId === editingReceiptId);
+    if (txIdx >= 0) {
+      db.payments[txIdx] = {
+        ...db.payments[txIdx],
+        date, desc: store, method, amount: total, tags,
+        note: `Ročni vnos računa · ${items.length} artikel${items.length===1?'':'ov'}`,
+      };
+    } else {
+      // Receipt je bil že shranjen pred to popravko — dodaj transakcijo
+      db.payments.push({
+        id: db.nextId++,
+        receiptId: editingReceiptId,
+        date, desc: store,
+        cat: guessCat(store) || 'Trgovina – živila',
+        method, amount: total, tags,
+        note: `Ročni vnos računa · ${items.length} artikel${items.length===1?'':'ov'}`,
+        installments: 0
+      });
+    }
   } else {
     receiptsDb.receipts.push(r);
+    // Ustvari nov zapis v db.payments
+    db.payments.push({
+      id: db.nextId++,
+      receiptId: r.id,
+      date, desc: store,
+      cat: guessCat(store) || 'Trgovina – živila',
+      method, amount: total, tags,
+      note: `Ročni vnos računa · ${items.length} artikel${items.length===1?'':'ov'}`,
+      installments: 0
+    });
   }
+
   items.forEach(it => { if (it.group) recordItemGroup(it.name, it.group); });
-  saveData(); closeModal('modalReceipt'); renderStore();
+  recordCatUsage(store, guessCat(store) || 'Trgovina – živila');
+  saveData();
+  closeModal('modalReceipt');
+  renderAll();
   showStatus('Račun shranjen ✓');
 }
 
 function deleteReceipt(id) {
   if (!confirm('Izbriši ta račun?')) return;
   receiptsDb.receipts = receiptsDb.receipts.filter(r=>r.id!==id);
-  saveData(); renderStore();
+  // Odstrani tudi ustrezen zapis v transakcijah (če obstaja)
+  db.payments = db.payments.filter(p => p.receiptId !== id);
+  saveData(); renderAll();
   showStatus('Račun izbrisan');
 }
 
@@ -6171,6 +6215,40 @@ function finishInit() {
 
   // Normaliziramo datume za vse vire podatkov (seed, firebase, ročni vnosi)
   try { normalizeDates(); } catch(e) { console.warn('normalizeDates:', e); }
+
+  // ── Migracija: ročni računi brez ustrezne transakcije → db.payments ──
+  // Teče tukaj ker so v tem trenutku zagotovo naložene vse funkcije (guessCat itd.)
+  // in vsi podatki (db, receiptsDb, seedData).
+  try {
+    let migrated = 0;
+    (receiptsDb.receipts || []).forEach(r => {
+      // Preskoči seed receipte (id < 100) — ti imajo ločene transakcije v db.payments
+      if ((r.id || 0) < 100) return;
+      const alreadyLinked = db.payments.some(p => p.receiptId === r.id);
+      if (!alreadyLinked) {
+        const total = Math.round((r.items||[]).reduce((s,i)=>s+(i.price*(i.qty||1)),0)*100)/100;
+        if (total > 0) {
+          db.payments.push({
+            id: db.nextId++,
+            receiptId: r.id,
+            date: r.date,
+            desc: r.store,
+            cat: guessCat(r.store) || 'Trgovina – živila',
+            method: r.method || 'Bančna kartica',
+            amount: total,
+            tags: r.tags || [],
+            note: `Ročni vnos računa · ${(r.items||[]).length} artikel${(r.items||[]).length===1?'':'ov'}`,
+            installments: 0
+          });
+          migrated++;
+        }
+      }
+    });
+    if (migrated > 0) {
+      saveData();
+      console.log(`Migrirano ${migrated} računov v transakcije`);
+    }
+  } catch(e) { console.warn('Migracija računov:', e); }
 
   try { renderAll(); } catch(e) { console.error('renderAll error:', e); }
   try { refreshCatSelects(); } catch(e) {}
