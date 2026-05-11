@@ -423,6 +423,36 @@ body {
   white-space: nowrap;
 }
 .amount-cell.zero { color: var(--text3); font-size: 11px; }
+.amount-cell.income { color: var(--green); }
+.tx-income-row { background: rgba(45,122,79,0.03); }
+.type-toggle {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.type-toggle-btn {
+  flex: 1;
+  padding: 9px 0;
+  border: none;
+  background: var(--surface);
+  color: var(--text2);
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.type-toggle-btn.active-expense {
+  background: var(--red-bg);
+  color: var(--red);
+}
+.type-toggle-btn.active-income {
+  background: var(--green-bg);
+  color: var(--green);
+}
 
 /* ── MODAL ── */
 .modal-backdrop {
@@ -1149,6 +1179,11 @@ tr:hover .action-btns { opacity: 1; }
           <select id="txCat" onchange="renderTx()">
             <option value="">Vse kategorije</option>
           </select>
+          <select id="txType" onchange="renderTx()">
+            <option value="">Odhodki + prihodki</option>
+            <option value="odhodek">Samo odhodki</option>
+            <option value="prihodek">Samo prihodki</option>
+          </select>
         </div>
         <div class="table-wrap desktop-only">
           <table>
@@ -1609,6 +1644,11 @@ tr:hover .action-btns { opacity: 1; }
 <div class="modal-backdrop" id="modalTx">
   <div class="modal">
     <h3 id="modalTxTitle">Dodaj plačilo</h3>
+    <!-- Type toggle: odhodek / prihodek -->
+    <div class="type-toggle" id="txTypeToggle">
+      <button class="type-toggle-btn active-expense" id="btnTypeExpense" onclick="setTxType('odhodek')">↑ Odhodek / strošek</button>
+      <button class="type-toggle-btn" id="btnTypeIncome" onclick="setTxType('prihodek')">↓ Prihodek</button>
+    </div>
     <div class="form-grid">
       <div class="form-row">
         <label>Opis / Trgovec *</label>
@@ -2947,6 +2987,7 @@ function methodBadge(m) {
 
 let ALL_CATS = [
   'Plača','Popoldanska dejavnost','Varčevanje in investicije','Kredit','Dohodnina','Bančni stroški',
+  'Freelance / honorar','Najemnina (prihodek)','Dividende','Vračilo','Darilo (prihodek)','Drugi prihodki',
   'Trgovina – živila','Restavracije in kosila','Dostava hrane','Kava in pijača zunaj','Malica v službi',
   'Gorivo','Polnjenje EV','Registracija','Zavarovanje avtomobila','Servis','Pnevmatike','Vinjeta','Cestnine','Parkirnine','Avtopralnica in čiščenje','Vinjete za tujino in tunelnine',
   'Streaming','Naročnine','Mobilna naročnina','Shranjevanje v oblaku','AI orodja','Igre – mikrotransakcije','Plačljive mobilne aplikacije',
@@ -3437,11 +3478,13 @@ function getFiltered() {
   const mo = document.getElementById('txMonth').value;
   const mt = document.getElementById('txMethod').value;
   const ct = document.getElementById('txCat').value;
+  const tp = document.getElementById('txType') ? document.getElementById('txType').value : '';
   if (q) data = data.filter(p => p.desc.toLowerCase().includes(q) || (p.note||'').toLowerCase().includes(q) || (p.tags||[]).some(t => t.toLowerCase().includes(q)));
   if (yr && mo) data = data.filter(p => p.date.startsWith(yr + '-' + mo));
   else if (yr) data = data.filter(p => p.date.startsWith(yr));
   if (mt) data = data.filter(p => p.method === mt);
   if (ct) data = data.filter(p => p.cat === ct);
+  if (tp) data = data.filter(p => (p.type || 'odhodek') === tp);
   data.sort((a,b) => {
     let va = a[sortKey], vb = b[sortKey];
     if (sortKey === 'amount') { va = va||0; vb = vb||0; }
@@ -3491,18 +3534,21 @@ function renderTx() {
   }
 
   // Desktop table
-  if (tbody) tbody.innerHTML = data.map(p => `
-    <tr>
+  if (tbody) tbody.innerHTML = data.map(p => {
+    const isIncome = (p.type === 'prihodek');
+    return `
+    <tr class="${isIncome ? 'tx-income-row' : ''}">
       <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);white-space:nowrap">${fmtDate(p.date)}</td>
       <td>
         <div style="font-weight:500;font-size:13px">${p.desc}</div>
         ${p.note ? `<div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace">${p.note}</div>` : ''}
         ${p.installments > 0 ? `<span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--purple)">▸ ${p.installments} obrokov</span>` : ''}
+        ${isIncome ? `<span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--green)">↓ prihodek</span>` : ''}
       </td>
       <td>${catBadge(p.cat)}</td>
       <td><div class="flex-gap">${tagHtml(p.tags)}</div></td>
       <td>${methodBadge(p.method)}</td>
-      <td class="amount-cell ${!p.amount ? 'zero' : ''}">${fmtAmt(p.amount)}</td>
+      <td class="amount-cell ${!p.amount ? 'zero' : isIncome ? 'income' : ''}">${isIncome ? '+' : ''}${fmtAmt(p.amount)}</td>
       <td>
         <div class="action-btns">
           <button class="btn btn-sm btn-ghost" onclick="openEditModal(${p.id})">uredi</button>
@@ -3511,13 +3557,15 @@ function renderTx() {
         </div>
       </td>
     </tr>
-  `).join('');
+  `}).join('');
 
   // Mobile cards
-  if (cardList) cardList.innerHTML = data.map(p => `
-    <div class="tx-card" onclick="openEditModal(${p.id})">
+  if (cardList) cardList.innerHTML = data.map(p => {
+    const isIncome = (p.type === 'prihodek');
+    return `
+    <div class="tx-card" onclick="openEditModal(${p.id})" style="${isIncome ? 'border-left:3px solid var(--green)' : ''}">
       <div class="tx-card-left">
-        <div class="tx-card-desc">${p.desc}</div>
+        <div class="tx-card-desc">${p.desc}${isIncome ? ' <span style="font-size:10px;color:var(--green);font-family:\'DM Mono\',monospace">↓</span>' : ''}</div>
         <div class="tx-card-meta">
           <span>${fmtDate(p.date)}</span>
           ${catBadge(p.cat)}
@@ -3527,14 +3575,14 @@ function renderTx() {
         ${(p.tags||[]).length ? `<div class="tx-card-tags">${p.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>` : ''}
       </div>
       <div class="tx-card-right">
-        <div class="tx-card-amount ${!p.amount ? 'zero' : ''}">${fmtAmt(p.amount)}</div>
+        <div class="tx-card-amount ${!p.amount ? 'zero' : ''}" style="${isIncome ? 'color:var(--green)' : ''}">${isIncome ? '+' : ''}${fmtAmt(p.amount)}</div>
         <div class="tx-card-actions">
           <button class="btn btn-sm btn-ghost" style="height:26px;padding:0 8px;font-size:13px;color:var(--accent)" onclick="event.stopPropagation();duplicateTx(${p.id})" title="Podvoji">⧉</button>
           <button class="btn btn-sm btn-danger" style="height:26px;padding:0 8px;font-size:11px" onclick="event.stopPropagation();deleteTx(${p.id})">✕</button>
         </div>
       </div>
     </div>
-  `).join('');
+  `}).join('');
 
   renderTxMetrics(data);
   document.getElementById('cnt-transactions').textContent = db.payments.length;
@@ -3542,16 +3590,20 @@ function renderTx() {
 }
 
 function renderTxMetrics(data) {
-  const total = data.filter(p=>p.amount>0).reduce((s,p)=>s+p.amount,0);
+  const expenses = data.filter(p => (p.type || 'odhodek') === 'odhodek' && p.amount > 0);
+  const incomes  = data.filter(p => p.type === 'prihodek' && p.amount > 0);
+  const totalExp = expenses.reduce((s,p)=>s+p.amount,0);
+  const totalInc = incomes.reduce((s,p)=>s+p.amount,0);
+  const net = totalInc - totalExp;
   const cnt = data.length;
-  const byMethod = (m) => data.filter(p=>p.method===m&&p.amount>0).reduce((s,p)=>s+p.amount,0);
+  const byMethod = (m) => expenses.filter(p=>p.method===m).reduce((s,p)=>s+p.amount,0);
   const el = document.getElementById('txMetrics');
   if (!el) return;
   el.innerHTML = `
-    <div class="metric-card"><div class="metric-label">Skupaj (znani)</div><div class="metric-value">€${total.toFixed(2)}</div><div class="metric-sub">${cnt} transakcij</div></div>
-    <div class="metric-card"><div class="metric-label">Kreditna</div><div class="metric-value">€${byMethod('Kreditna kartica').toFixed(2)}</div><div class="metric-sub">${data.filter(p=>p.method==='Kreditna kartica').length} tx</div></div>
-    <div class="metric-card"><div class="metric-label">PayPal</div><div class="metric-value">€${byMethod('PayPal').toFixed(2)}</div><div class="metric-sub">${data.filter(p=>p.method==='PayPal').length} tx</div></div>
-    <div class="metric-card"><div class="metric-label">Bančna</div><div class="metric-value">€${byMethod('Bančna kartica').toFixed(2)}</div><div class="metric-sub">${data.filter(p=>p.method==='Bančna kartica').length} tx</div></div>
+    <div class="metric-card" style="border-left:3px solid var(--red)"><div class="metric-label">Odhodki</div><div class="metric-value">€${totalExp.toFixed(2)}</div><div class="metric-sub">${expenses.length} transakcij</div></div>
+    <div class="metric-card" style="border-left:3px solid var(--green)"><div class="metric-label">Prihodki</div><div class="metric-value" style="color:var(--green)">€${totalInc.toFixed(2)}</div><div class="metric-sub">${incomes.length} transakcij</div></div>
+    <div class="metric-card" style="border-left:3px solid ${net>=0?'var(--green)':'var(--red)'}"><div class="metric-label">Neto (prihodki − odhodki)</div><div class="metric-value" style="color:${net>=0?'var(--green)':'var(--red)'}">${net>=0?'+':''}€${net.toFixed(2)}</div><div class="metric-sub">${cnt} skupaj</div></div>
+    <div class="metric-card"><div class="metric-label">Kreditna</div><div class="metric-value">€${byMethod('Kreditna kartica').toFixed(2)}</div><div class="metric-sub">${expenses.filter(p=>p.method==='Kreditna kartica').length} tx</div></div>
   `;
 }
 
@@ -3578,7 +3630,7 @@ function duplicateTx(id) {
 function openAddModal() {
   editingTxId = null;
   currentTags = [];
-  document.getElementById('modalTxTitle').textContent = 'Dodaj plačilo';
+  document.getElementById('modalTxTitle').textContent = 'Dodaj transakcijo';
   document.getElementById('fDesc').value = '';
   document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
   document.getElementById('fAmount').value = '';
@@ -3587,6 +3639,7 @@ function openAddModal() {
   document.getElementById('fInstallments').value = '12';
   refreshCatSelects('Trgovina – živila');
   document.getElementById('fCat').value = 'Trgovina – živila';
+  setTxType('odhodek');
   renderTagInputWrap();
   updateInstCalc();
   document.getElementById('modalTx').classList.add('open');
@@ -3598,7 +3651,7 @@ function openEditModal(id) {
   if (!p) return;
   editingTxId = id;
   currentTags = [...(p.tags||[])];
-  document.getElementById('modalTxTitle').textContent = 'Uredi plačilo';
+  document.getElementById('modalTxTitle').textContent = 'Uredi transakcijo';
   document.getElementById('fDesc').value = p.desc;
   document.getElementById('fDate').value = p.date;
   document.getElementById('fAmount').value = p.amount || '';
@@ -3607,6 +3660,7 @@ function openEditModal(id) {
   document.getElementById('fInstallments').value = p.installments || 12;
   refreshCatSelects(p.cat);
   document.getElementById('fCat').value = p.cat;
+  setTxType(p.type || 'odhodek');
   renderTagInputWrap();
   updateInstCalc();
   document.getElementById('modalTx').classList.add('open');
@@ -3618,6 +3672,7 @@ function saveTx() {
   const method = document.getElementById('fMethod').value;
   const amt = parseFloat(document.getElementById('fAmount').value) || 0;
   const inst = parseInt(document.getElementById('fInstallments').value) || 0;
+  const txType = currentTxType || 'odhodek';
   const p = {
     id: editingTxId || db.nextId++,
     date: normalizeDate(document.getElementById('fDate').value),
@@ -3627,8 +3682,9 @@ function saveTx() {
     amount: amt,
     note: document.getElementById('fNote').value.trim(),
     tags: [...currentTags],
+    type: txType,
   };
-  if (method === 'Kreditna kartica') p.installments = inst;
+  if (method === 'Kreditna kartica' && txType === 'odhodek') p.installments = inst;
   if (editingTxId) {
     const idx = db.payments.findIndex(x => x.id === editingTxId);
     if (idx >= 0) db.payments[idx] = p;
@@ -3637,7 +3693,33 @@ function saveTx() {
   }
   saveData(); closeModal('modalTx'); renderTx();
   recordCatUsage(desc, document.getElementById('fCat').value);
-  showStatus(editingTxId ? 'Plačilo posodobljeno' : 'Plačilo dodano ✓');
+  showStatus(editingTxId ? 'Posodobljeno ✓' : (txType === 'prihodek' ? 'Prihodek dodan ✓' : 'Plačilo dodano ✓'));
+}
+
+// ═══════════════════════════════════════════════
+// TRANSACTION TYPE (odhodek / prihodek)
+// ═══════════════════════════════════════════════
+let currentTxType = 'odhodek';
+
+function setTxType(type) {
+  currentTxType = type;
+  const btnExp = document.getElementById('btnTypeExpense');
+  const btnInc = document.getElementById('btnTypeIncome');
+  const instBox = document.getElementById('instCalcBox');
+  if (!btnExp || !btnInc) return;
+  if (type === 'prihodek') {
+    btnExp.className = 'type-toggle-btn';
+    btnInc.className = 'type-toggle-btn active-income';
+    // Prihodki ne morejo biti na obroke
+    if (instBox) instBox.style.display = 'none';
+    // Predlagana kategorija za prihodek
+    const catEl = document.getElementById('fCat');
+    if (catEl && !catEl.value) catEl.value = 'Plača';
+  } else {
+    btnExp.className = 'type-toggle-btn active-expense';
+    btnInc.className = 'type-toggle-btn';
+    updateInstCalc();
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -3668,7 +3750,7 @@ function removeTag(t) { currentTags = currentTags.filter(x => x !== t); renderTa
 function updateInstCalc() {
   const m = document.getElementById('fMethod').value;
   const box = document.getElementById('instCalcBox');
-  box.style.display = m === 'Kreditna kartica' ? 'block' : 'none';
+  box.style.display = (m === 'Kreditna kartica' && currentTxType !== 'prihodek') ? 'block' : 'none';
   const amt = parseFloat(document.getElementById('fAmount').value) || 0;
   const n = parseInt(document.getElementById('fInstallments').value) || 0;
   if (n > 0 && amt > 0) {
