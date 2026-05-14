@@ -1213,6 +1213,8 @@ tr:hover .action-btns { opacity: 1; }
         <!-- Tab navigation -->
         <div class="section-tabs" style="margin-bottom:20px">
           <button class="section-tab active" id="atab-tx" onclick="switchAnalyticsTab('tx')">Transakcije</button>
+          <button class="section-tab" id="atab-income" onclick="switchAnalyticsTab('income')">Prihodki &amp; neto</button>
+          <button class="section-tab" id="atab-merchants" onclick="switchAnalyticsTab('merchants')">Poraba po mestu</button>
           <button class="section-tab" id="atab-store" onclick="switchAnalyticsTab('store')">Artikli iz trgovine</button>
         </div>
 
@@ -1254,6 +1256,82 @@ tr:hover .action-btns { opacity: 1; }
               </div>
               <div style="position:relative;height:220px"><canvas id="chartMonthly" role="img" aria-label="Crtni grafikon mesecnih stroskov"></canvas></div>
             </div>
+          </div>
+        </div>
+
+        <!-- TAB: PRIHODKI & NETO -->
+        <div id="analyticsTabIncome" style="display:none">
+          <div class="metrics-grid" id="incomeMetrics"></div>
+          <div class="chart-grid">
+            <div class="chart-card chart-card-full">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+                <div class="chart-card-title" style="margin-bottom:0">Prihodki vs. odhodki po mesecih</div>
+                <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+                  <select id="incomeYear" onchange="renderIncomeCharts()" style="font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-family:'Syne',sans-serif">
+                    <option value="both">Vsa leta</option>
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                  </select>
+                </div>
+              </div>
+              <div style="position:relative;height:260px"><canvas id="chartIncomeVsExpense" role="img" aria-label="Prihodki vs odhodki"></canvas></div>
+            </div>
+            <div class="chart-card chart-card-full">
+              <div class="chart-card-title">Neto (prihranek) po mesecih</div>
+              <div style="position:relative;height:220px"><canvas id="chartNetMonthly" role="img" aria-label="Neto prihranek po mesecih"></canvas></div>
+            </div>
+          </div>
+          <!-- Income breakdown table -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:20px;margin-top:4px">
+            <div class="chart-card-title" style="margin-bottom:14px">Pregled prihodkov po mesecih</div>
+            <div id="incomeBreakdownTable"></div>
+          </div>
+        </div>
+
+        <!-- TAB: PORABA PO MESTU / TRGOVINI -->
+        <div id="analyticsTabMerchants" style="display:none">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+            <select id="merchantsYear" onchange="renderMerchantsTab()" style="height:34px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);font-family:'Syne',sans-serif;font-size:12px;padding:0 10px">
+              <option value="both">Vsa leta</option>
+              <option value="2026">2026</option>
+              <option value="2025">2025</option>
+              <option value="2024">2024</option>
+            </select>
+            <select id="merchantsMonth" onchange="renderMerchantsTab()" style="height:34px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);font-family:'Syne',sans-serif;font-size:12px;padding:0 10px">
+              <option value="">Vsi meseci</option>
+              <option value="01">Januar</option><option value="02">Februar</option>
+              <option value="03">Marec</option><option value="04">April</option>
+              <option value="05">Maj</option><option value="06">Junij</option>
+              <option value="07">Julij</option><option value="08">Avgust</option>
+              <option value="09">September</option><option value="10">Oktober</option>
+              <option value="11">November</option><option value="12">December</option>
+            </select>
+            <input type="search" id="merchantsSearch" placeholder="Išči trgovca..." oninput="renderMerchantsTab()" style="height:34px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:var(--text);font-family:'Syne',sans-serif;font-size:12px;padding:0 10px;min-width:160px;outline:none">
+          </div>
+          <div class="metrics-grid" id="merchantsMetrics"></div>
+          <div class="chart-grid" style="margin-bottom:16px">
+            <div class="chart-card chart-card-full">
+              <div class="chart-card-title">Top 15 mest porabe</div>
+              <div style="position:relative;height:300px"><canvas id="chartMerchants" role="img" aria-label="Poraba po mestih"></canvas></div>
+            </div>
+          </div>
+          <!-- Detailed merchant table -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden">
+            <table style="width:100%;border-collapse:collapse">
+              <thead>
+                <tr style="background:var(--surface2);border-bottom:1px solid var(--border)">
+                  <th style="padding:10px 14px;text-align:left;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3);font-weight:400">#</th>
+                  <th style="padding:10px 14px;text-align:left;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3);font-weight:400">Trgovec / mesto</th>
+                  <th style="padding:10px 14px;text-align:right;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3);font-weight:400">Skupaj</th>
+                  <th style="padding:10px 14px;text-align:right;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3);font-weight:400">Obiski</th>
+                  <th style="padding:10px 14px;text-align:right;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3);font-weight:400">Povprečno</th>
+                  <th style="padding:10px 14px;text-align:left;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3);font-weight:400">Kategorija</th>
+                </tr>
+              </thead>
+              <tbody id="merchantsTableBody"></tbody>
+            </table>
+            <div class="table-empty" id="merchantsEmpty" style="display:none">Ni podatkov za izbrane filtre.</div>
           </div>
         </div>
 
@@ -2951,7 +3029,12 @@ function navigate(page) {
   document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active'));
   const bnId = bnMap[page];
   if (bnId) { const el = document.getElementById(bnId); if (el) el.classList.add('active'); }
-  if (page === 'analytics') { if (currentAnalyticsTab === 'store') renderStoreCharts(); else renderCharts(); }
+  if (page === 'analytics') {
+    if (currentAnalyticsTab === 'store') renderStoreCharts();
+    else if (currentAnalyticsTab === 'income') renderIncomeCharts();
+    else if (currentAnalyticsTab === 'merchants') renderMerchantsTab();
+    else renderCharts();
+  }
   if (page === 'installments') renderInstallments();
   if (page === 'creditcard') renderCreditCard();
   if (page === 'debitcard') renderDebitCard();
@@ -3932,12 +4015,234 @@ function renderCharts() {
 let currentAnalyticsTab = 'tx';
 function switchAnalyticsTab(tab) {
   currentAnalyticsTab = tab;
-  document.getElementById('analyticsTabTx').style.display    = tab === 'tx'    ? '' : 'none';
-  document.getElementById('analyticsTabStore').style.display = tab === 'store' ? '' : 'none';
-  document.getElementById('atab-tx').classList.toggle('active',    tab === 'tx');
-  document.getElementById('atab-store').classList.toggle('active', tab === 'store');
+  document.getElementById('analyticsTabTx').style.display        = tab === 'tx'        ? '' : 'none';
+  document.getElementById('analyticsTabStore').style.display     = tab === 'store'     ? '' : 'none';
+  document.getElementById('analyticsTabIncome').style.display    = tab === 'income'    ? '' : 'none';
+  document.getElementById('analyticsTabMerchants').style.display = tab === 'merchants' ? '' : 'none';
+  document.getElementById('atab-tx').classList.toggle('active',        tab === 'tx');
+  document.getElementById('atab-store').classList.toggle('active',     tab === 'store');
+  document.getElementById('atab-income').classList.toggle('active',    tab === 'income');
+  document.getElementById('atab-merchants').classList.toggle('active', tab === 'merchants');
   if (tab === 'store') renderStoreCharts();
+  else if (tab === 'income') renderIncomeCharts();
+  else if (tab === 'merchants') renderMerchantsTab();
   else renderCharts();
+}
+
+// ═══════════════════════════════════════════════
+// ANALYTICS: PRIHODKI & NETO
+// ═══════════════════════════════════════════════
+let chartIncomeVsExpRef = null, chartNetRef = null;
+
+function renderIncomeCharts() {
+  const yr = document.getElementById('incomeYear').value;
+  const MONTHS_SL = ['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Avg','Sep','Okt','Nov','Dec'];
+
+  // Build month buckets
+  const buckets = {}; // key: YYYY-MM
+  db.payments.forEach(p => {
+    if (!p.date || !p.amount) return;
+    if (yr !== 'both' && !p.date.startsWith(yr)) return;
+    const key = p.date.slice(0,7);
+    if (!buckets[key]) buckets[key] = { inc: 0, exp: 0 };
+    if ((p.type || 'odhodek') === 'prihodek') buckets[key].inc += p.amount;
+    else buckets[key].exp += p.amount;
+  });
+  // Also include dcEntries income
+  dcEntries.forEach(e => {
+    if (e.type !== 'prihodek' || !e.date || !e.amount) return;
+    if (yr !== 'both' && !e.date.startsWith(yr)) return;
+    const key = e.date.slice(0,7);
+    if (!buckets[key]) buckets[key] = { inc: 0, exp: 0 };
+    buckets[key].inc += e.amount;
+  });
+
+  const keys = Object.keys(buckets).sort();
+  const labels = keys.map(k => { const [y,m] = k.split('-'); return MONTHS_SL[+m-1] + (yr==='both'?' '+y:''); });
+  const incData = keys.map(k => +(buckets[k].inc.toFixed(2)));
+  const expData = keys.map(k => +(buckets[k].exp.toFixed(2)));
+  const netData = keys.map(k => +((buckets[k].inc - buckets[k].exp).toFixed(2)));
+
+  const totalInc = incData.reduce((s,v)=>s+v,0);
+  const totalExp = expData.reduce((s,v)=>s+v,0);
+  const totalNet = totalInc - totalExp;
+  const avgNet = keys.length ? totalNet/keys.length : 0;
+
+  // Metrics
+  document.getElementById('incomeMetrics').innerHTML = `
+    <div class="metric-card" style="border-left:3px solid var(--green)">
+      <div class="metric-label">Skupaj prihodki</div>
+      <div class="metric-value" style="color:var(--green)">€${totalInc.toFixed(2)}</div>
+      <div class="metric-sub">${yr === 'both' ? 'Vsa leta' : yr}</div>
+    </div>
+    <div class="metric-card" style="border-left:3px solid var(--red)">
+      <div class="metric-label">Skupaj odhodki</div>
+      <div class="metric-value" style="color:var(--red)">€${totalExp.toFixed(2)}</div>
+      <div class="metric-sub">${yr === 'both' ? 'Vsa leta' : yr}</div>
+    </div>
+    <div class="metric-card" style="border-left:3px solid ${totalNet>=0?'var(--green)':'var(--red)'}">
+      <div class="metric-label">Neto prihranek</div>
+      <div class="metric-value" style="color:${totalNet>=0?'var(--green)':'var(--red)'}">${totalNet>=0?'+':''}€${totalNet.toFixed(2)}</div>
+      <div class="metric-sub">Skupaj</div>
+    </div>
+    <div class="metric-card" style="border-left:3px solid var(--accent)">
+      <div class="metric-label">Povprečno neto / mesec</div>
+      <div class="metric-value" style="color:${avgNet>=0?'var(--green)':'var(--red)'};font-size:19px">${avgNet>=0?'+':''}€${avgNet.toFixed(2)}</div>
+      <div class="metric-sub">${keys.length} mesecev</div>
+    </div>
+  `;
+
+  // Income vs Expense grouped bar chart
+  if (chartIncomeVsExpRef) chartIncomeVsExpRef.destroy();
+  chartIncomeVsExpRef = new Chart(document.getElementById('chartIncomeVsExpense'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Prihodki', data: incData, backgroundColor: 'rgba(45,122,79,0.75)', borderRadius: 3 },
+        { label: 'Odhodki',  data: expData, backgroundColor: 'rgba(184,50,50,0.55)',  borderRadius: 3 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: true, position: 'top', labels: { font: { family: 'DM Mono', size: 10 }, boxWidth: 12 } },
+        tooltip: { callbacks: { label: ctx => ' €' + ctx.parsed.y.toFixed(2) } } },
+      scales: { x: { grid: { display: false }, ticks: { font: { family: 'DM Mono', size: 10 } } },
+                y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { callback: v => '€'+v, font: { family: 'DM Mono', size: 10 } } } }
+    }
+  });
+
+  // Net monthly bar chart
+  if (chartNetRef) chartNetRef.destroy();
+  chartNetRef = new Chart(document.getElementById('chartNetMonthly'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label: 'Neto', data: netData,
+        backgroundColor: netData.map(v => v >= 0 ? 'rgba(45,122,79,0.7)' : 'rgba(184,50,50,0.6)'),
+        borderRadius: 3 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ' €' + ctx.parsed.y.toFixed(2) } } },
+      scales: { x: { grid: { display: false }, ticks: { font: { family: 'DM Mono', size: 10 } } },
+                y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { callback: v => '€'+v, font: { family: 'DM Mono', size: 10 } } } }
+    }
+  });
+
+  // Breakdown table
+  const tableRows = keys.map((k,i) => {
+    const [y,m] = k.split('-');
+    const net = netData[i];
+    const savRate = incData[i] > 0 ? Math.round((net/incData[i])*100) : null;
+    return `
+      <div style="display:grid;grid-template-columns:100px 1fr 1fr 1fr 80px;gap:0;padding:9px 0;border-bottom:1px solid var(--border);align-items:center">
+        <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text2)">${MONTHS_SL[+m-1]} ${y}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)">+€${incData[i].toFixed(2)}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--red)">−€${expData[i].toFixed(2)}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:${net>=0?'var(--green)':'var(--red)'}">${net>=0?'+':''}€${net.toFixed(2)}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:${savRate!=null&&savRate>=0?'var(--green)':'var(--text3)'}">${savRate!=null?savRate+'% var.':'—'}</div>
+      </div>`;
+  }).reverse().join('');
+
+  document.getElementById('incomeBreakdownTable').innerHTML = `
+    <div style="display:grid;grid-template-columns:100px 1fr 1fr 1fr 80px;gap:0;padding:6px 0 10px;border-bottom:2px solid var(--border);margin-bottom:2px">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3)">Mesec</div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3)">Prihodki</div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3)">Odhodki</div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3)">Neto</div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.8px;text-transform:uppercase;color:var(--text3)">Var. stopnja</div>
+    </div>
+    ${tableRows || '<div style="font-size:12px;color:var(--text3);padding:12px 0">Ni podatkov.</div>'}
+  `;
+}
+
+// ═══════════════════════════════════════════════
+// ANALYTICS: PORABA PO TRGOVCIH / MESTIH
+// ═══════════════════════════════════════════════
+let chartMerchantsRef = null;
+
+function renderMerchantsTab() {
+  const yr  = document.getElementById('merchantsYear').value;
+  const mo  = document.getElementById('merchantsMonth').value;
+  const q   = (document.getElementById('merchantsSearch')?.value || '').toLowerCase().trim();
+
+  // Only expenses
+  let data = db.payments.filter(p => (p.type||'odhodek') === 'odhodek' && p.amount > 0);
+  if (yr !== 'both') data = data.filter(p => p.date && p.date.startsWith(yr));
+  if (mo) data = data.filter(p => p.date && p.date.slice(5,7) === mo);
+  if (q) data = data.filter(p => p.desc.toLowerCase().includes(q));
+
+  // Aggregate by merchant
+  const map = {};
+  data.forEach(p => {
+    const key = p.desc.trim();
+    if (!map[key]) map[key] = { name: key, total: 0, count: 0, cat: p.cat };
+    map[key].total += p.amount;
+    map[key].count++;
+  });
+  const sorted = Object.values(map).sort((a,b) => b.total - a.total);
+  const grandTotal = sorted.reduce((s,m) => s+m.total, 0);
+
+  // Metrics
+  const top1 = sorted[0];
+  document.getElementById('merchantsMetrics').innerHTML = `
+    <div class="metric-card"><div class="metric-label">Skupaj odhodki</div><div class="metric-value">€${grandTotal.toFixed(2)}</div><div class="metric-sub">${data.length} transakcij</div></div>
+    <div class="metric-card"><div class="metric-label">Različnih mest</div><div class="metric-value">${sorted.length}</div><div class="metric-sub">unikatnih trgovcev</div></div>
+    <div class="metric-card" style="border-left:3px solid var(--accent)"><div class="metric-label">Največ porabljeno pri</div><div class="metric-value" style="font-size:16px;letter-spacing:-0.3px">${top1?top1.name:'—'}</div><div class="metric-sub">${top1?'€'+top1.total.toFixed(2):''}</div></div>
+    <div class="metric-card"><div class="metric-label">Povprečno na obisk</div><div class="metric-value">€${data.length?((grandTotal/data.length).toFixed(2)):'0.00'}</div><div class="metric-sub">€ / transakcija</div></div>
+  `;
+
+  // Chart (top 15)
+  const top15 = sorted.slice(0, 15);
+  if (chartMerchantsRef) chartMerchantsRef.destroy();
+  if (top15.length) {
+    chartMerchantsRef = new Chart(document.getElementById('chartMerchants'), {
+      type: 'bar',
+      data: {
+        labels: top15.map(m => m.name.length > 22 ? m.name.slice(0,20)+'…' : m.name),
+        datasets: [{ data: top15.map(m => +m.total.toFixed(2)),
+          backgroundColor: 'rgba(196,147,58,0.7)', borderRadius: 4, borderSkipped: false }]
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ' €' + ctx.parsed.x.toFixed(2) + ' (' + (top15[ctx.dataIndex].count) + '×)' } } },
+        scales: { x: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { callback: v=>'€'+v, font:{family:'DM Mono',size:10} } },
+                  y: { grid: { display: false }, ticks: { font:{family:'DM Mono',size:10} } } }
+      }
+    });
+  }
+
+  // Table
+  const tbody = document.getElementById('merchantsTableBody');
+  const empty = document.getElementById('merchantsEmpty');
+  if (!sorted.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  tbody.innerHTML = sorted.map((m,i) => {
+    const share = grandTotal > 0 ? (m.total/grandTotal*100).toFixed(1) : '0';
+    const barW = Math.max(4, Math.round(m.total/sorted[0].total*80));
+    return `
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:10px 14px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${i+1}</td>
+        <td style="padding:10px 14px">
+          <div style="font-weight:500;font-size:13px">${m.name}</div>
+          <div style="margin-top:5px;display:flex;align-items:center;gap:6px">
+            <div style="height:4px;width:${barW}px;background:var(--accent);border-radius:2px;opacity:0.7"></div>
+            <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text3)">${share}%</span>
+          </div>
+        </td>
+        <td style="padding:10px 14px;text-align:right;font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--accent)">€${m.total.toFixed(2)}</td>
+        <td style="padding:10px 14px;text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:var(--text2)">${m.count}×</td>
+        <td style="padding:10px 14px;text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:var(--text2)">€${(m.total/m.count).toFixed(2)}</td>
+        <td style="padding:10px 14px">${catBadge(m.cat)}</td>
+      </tr>`;
+  }).join('');
 }
 
 // ── Store filter helpers ──
@@ -5015,12 +5320,15 @@ function calcDcBalance() {
     else if (e.type === 'odhodek') balance -= e.amount;
     else if (e.type === 'popravek') balance = e.amount;
   });
-  // Auto-deduct debit card transactions if enabled
+  // Auto-deduct/add debit card transactions if enabled (respect type: prihodek adds, odhodek deducts)
   if (dcSettings.autoDeduct === 'yes') {
     const initD = dcSettings.initDate || '2000-01-01';
     db.payments
       .filter(p => p.method === 'Bančna kartica' && p.amount > 0 && p.date >= initD)
-      .forEach(p => { balance -= p.amount; });
+      .forEach(p => {
+        if (p.type === 'prihodek') balance += p.amount;
+        else balance -= p.amount; // odhodek (default)
+      });
   }
   return balance;
 }
@@ -5041,7 +5349,10 @@ function calcDcBalanceAtDate(upToDate) {
     const initD = dcSettings.initDate || '2000-01-01';
     db.payments
       .filter(p => p.method === 'Bančna kartica' && p.amount > 0 && p.date >= initD && p.date <= effectiveEnd)
-      .forEach(p => { balance -= p.amount; });
+      .forEach(p => {
+        if (p.type === 'prihodek') balance += p.amount;
+        else balance -= p.amount;
+      });
   }
   return balance;
 }
@@ -5057,14 +5368,22 @@ function buildDcRunning() {
     const initD = dcSettings.initDate || '2000-01-01';
     db.payments
       .filter(p => p.method === 'Bančna kartica' && p.amount > 0 && p.date >= initD)
-      .forEach(p => all.push({ id: 'tx-' + p.id, date: p.date, type: 'odhodek', desc: p.desc + ' (transakcija)', amount: p.amount, note: p.note || '', source: 'auto', future: p.date > today }));
+      .forEach(p => all.push({
+        id: 'tx-' + p.id,
+        date: p.date,
+        type: p.type === 'prihodek' ? 'prihodek' : 'odhodek',
+        desc: p.desc + ' (transakcija)',
+        amount: p.amount,
+        note: p.note || '',
+        source: 'auto',
+        future: p.date > today
+      }));
   }
   all.sort((a,b) => a.date.localeCompare(b.date) || 0);
   // Add initial balance as first synthetic row
   rows.push({ date: dcSettings.initDate || '—', desc: 'Začetno stanje', type: 'začetek', amount: balance, balanceAfter: balance, source: 'init', id: 'init' });
   all.forEach(e => {
     if (e.future) {
-      // Prihodnja transakcija — ne vpliva na stanje, le prikazana kot čakajoča
       rows.push({ ...e, balanceAfter: balance, pending: true });
     } else {
       if (e.type === 'prihodek') balance += e.amount;
@@ -5162,22 +5481,26 @@ function renderDebitCard() {
   }
 
   // ── Metrics (filtered to selected period) ──
-  const autoDebits = dcSettings.autoDeduct === 'yes'
+  const periodBankPayments = dcSettings.autoDeduct === 'yes'
     ? db.payments.filter(p => p.method === 'Bančna kartica' && p.amount > 0
-        && p.date >= periodStart && p.date <= periodEnd).reduce((s,p) => s+p.amount, 0)
-    : 0;
+        && p.date >= periodStart && p.date <= periodEnd)
+    : [];
+  const autoDebits  = periodBankPayments.filter(p => (p.type||'odhodek') === 'odhodek').reduce((s,p) => s+p.amount, 0);
+  const autoIncomes = periodBankPayments.filter(p => p.type === 'prihodek').reduce((s,p) => s+p.amount, 0);
   const manualIncome  = dcEntries.filter(e => e.type === 'prihodek' && e.date >= periodStart && e.date <= periodEnd).reduce((s,e) => s+e.amount, 0);
   const manualExpense = dcEntries.filter(e => e.type === 'odhodek'  && e.date >= periodStart && e.date <= periodEnd).reduce((s,e) => s+e.amount, 0);
+  const totalIncome  = manualIncome + autoIncomes;
+  const totalExpense = manualExpense + autoDebits;
 
   document.getElementById('dcMetrics').innerHTML = `
     <div class="metric-card"><div class="metric-label">Stanje konec meseca</div>
       <div class="metric-value" style="color:${isNeg?'var(--red)':isLow?'var(--accent)':'var(--text)'}">${isNeg?'−':''}€${Math.abs(balance).toFixed(2)}</div>
       <div class="metric-sub">${isNeg?'⚠ V minusu':isLow?'⚠ Pod referenčnim':'✓ '+dcSettings.note}</div></div>
     <div class="metric-card"><div class="metric-label">Prihodki (mesec)</div>
-      <div class="metric-value" style="color:var(--green)">+€${manualIncome.toFixed(2)}</div>
-      <div class="metric-sub">${dcEntries.filter(e=>e.type==='prihodek'&&e.date>=periodStart&&e.date<=periodEnd).length} vnosov</div></div>
+      <div class="metric-value" style="color:var(--green)">+€${totalIncome.toFixed(2)}</div>
+      <div class="metric-sub">${dcEntries.filter(e=>e.type==='prihodek'&&e.date>=periodStart&&e.date<=periodEnd).length + (dcSettings.autoDeduct==='yes'?periodBankPayments.filter(p=>p.type==='prihodek').length:0)} vnosov</div></div>
     <div class="metric-card"><div class="metric-label">Odhodki (mesec)</div>
-      <div class="metric-value" style="color:var(--red)">−€${(manualExpense+autoDebits).toFixed(2)}</div>
+      <div class="metric-value" style="color:var(--red)">−€${totalExpense.toFixed(2)}</div>
       <div class="metric-sub">${dcSettings.autoDeduct==='yes'?'vključno z bančno kartico':'samo ročni vnosi'}</div></div>
     <div class="metric-card"><div class="metric-label">Referenčno stanje</div>
       <div class="metric-value" style="color:var(--text2)">€${ref.toFixed(2)}</div>
@@ -5190,18 +5513,23 @@ function renderDebitCard() {
   document.getElementById('dcBarSubtitle').textContent   = dcSettings.note + (dcSettings.initDate ? ' · od ' + fmtDate(dcSettings.initDate) : '');
 
   // ── Income / expense previews (period-filtered) ──
-  const incomeItems = dcEntries.filter(e=>e.type==='prihodek'&&e.date>=periodStart&&e.date<=periodEnd)
-    .sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+  const incomeManual = dcEntries.filter(e=>e.type==='prihodek'&&e.date>=periodStart&&e.date<=periodEnd)
+    .map(e=>({...e, source:'manual'}));
+  const incomeAuto = (dcSettings.autoDeduct==='yes')
+    ? db.payments.filter(p=>p.method==='Bančna kartica'&&p.type==='prihodek'&&p.amount>0&&p.date>=periodStart&&p.date<=periodEnd)
+        .map(p=>({id:'tx-'+p.id, date:p.date, desc:p.desc, amount:p.amount, source:'auto'}))
+    : [];
+  const incomeItems = [...incomeManual, ...incomeAuto].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
   document.getElementById('dcIncomeList').innerHTML = incomeItems.length
     ? incomeItems.map(e=>`
         <div style="display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--border)">
-          <div><div style="font-size:12px">${e.desc}</div><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)">${fmtDate(e.date)}</div></div>
+          <div><div style="font-size:12px">${e.desc}</div><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)">${fmtDate(e.date)}${e.source==='auto'?' · transakcija':''}</div></div>
           <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--green)">+€${e.amount.toFixed(2)}</div>
         </div>`).join('')
     : '<div style="font-size:12px;color:var(--text3)">Ni prihodkov v tem mesecu.</div>';
 
   const expItems = dcSettings.autoDeduct==='yes'
-    ? db.payments.filter(p=>p.method==='Bančna kartica'&&p.amount>0&&p.date>=periodStart&&p.date<=periodEnd)
+    ? db.payments.filter(p=>p.method==='Bančna kartica'&&(p.type||'odhodek')==='odhodek'&&p.amount>0&&p.date>=periodStart&&p.date<=periodEnd)
         .sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5)
     : [];
   document.getElementById('dcExpenseList').innerHTML = expItems.length
